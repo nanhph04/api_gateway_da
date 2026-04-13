@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - JWT_SECRET=super_secret_jwt_key
+      - USER_SERVICE_URL=http://user-service:3001
+      - MEDIA_SERVICE_URL=http://media-service:3002
+      - WALLET_SERVICE_URL=http://wallet-service:3003
+      - PAYMENT_SERVICE_URL=http://payment-service:3004
+      - PROCESSING_SERVICE_URL=http://processing-service:3005
+    networks:
+      - dms_network
+    restart: unless-stopped
+
+networks:
+  dms_network:
+    driver: bridge
