@@ -34,9 +34,9 @@ export class RateLimitMiddleware implements NestMiddleware {
             windowMs: config.windowMs,
             max: config.max,
             keyGenerator: (req: Request) => {
-              const user = req['user'] as { userId?: string } | undefined;
-              if (user?.userId) {
-                return user.userId;
+              const user = req['user'] as { sub?: string } | undefined;
+              if (user?.sub) {
+                return user.sub;
               }
               return ipKeyGenerator(req.ip || 'unknown');
             },

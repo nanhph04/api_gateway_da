@@ -10,6 +10,8 @@ export const serviceConfig = registerAs('services', () => ({
   paymentServiceUrl: process.env.PAYMENT_SERVICE_URL || 'http://localhost:3004',
   processingServiceUrl:
     process.env.PROCESSING_SERVICE_URL || 'http://localhost:3005',
+  internalGatewaySecret:
+    process.env.INTERNAL_GATEWAY_SECRET || 'gateway-secret',
 }));
 
 export const rateLimitConfig = registerAs('rateLimit', () => ({
@@ -90,6 +92,13 @@ export class ServiceConfigService {
     return this.configService.get<string>(
       'services.processingServiceUrl',
       'http://localhost:3005',
+    );
+  }
+
+  get internalGatewaySecret(): string {
+    return this.configService.get<string>(
+      'services.internalGatewaySecret',
+      'gateway-secret',
     );
   }
 

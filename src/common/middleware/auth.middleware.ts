@@ -9,11 +9,11 @@ import * as jwt from 'jsonwebtoken';
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-    const path = req.originalUrl;
+    const path = req.path;
 
     // Skip auth for public routes (exact match or start with depending on needs)
     const publicRoutes = ['/api/auth/login', '/api/auth/register'];
-    if (publicRoutes.some((route) => path.startsWith(route))) {
+    if (publicRoutes.includes(path)) {
       return next();
     }
 
