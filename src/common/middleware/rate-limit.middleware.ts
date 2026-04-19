@@ -14,7 +14,7 @@ export class RateLimitMiddleware implements NestMiddleware {
   private initLimiters() {
     const rateLimitConfigs = {
       '^/api/auth': 'userService',
-      '^/api/users': 'userService',
+      '^/api/user': 'userService',
       '^/api/media': 'mediaService',
       '^/api/wallet': 'walletService',
       '^/api/payment': 'paymentService',

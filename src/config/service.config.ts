@@ -2,75 +2,118 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
 import { registerAs } from '@nestjs/config';
 
-export const serviceConfig = registerAs('services', () => ({
-  authServiceUrl: process.env.AUTH_SERVICE_URL || 'http://localhost:4000',
-  userServiceUrl: process.env.USER_SERVICE_URL || 'http://localhost:3001',
-  mediaServiceUrl: process.env.MEDIA_SERVICE_URL || 'http://localhost:3002',
-  walletServiceUrl: process.env.WALLET_SERVICE_URL || 'http://localhost:3003',
-  paymentServiceUrl: process.env.PAYMENT_SERVICE_URL || 'http://localhost:3004',
-  processingServiceUrl:
-    process.env.PROCESSING_SERVICE_URL || 'http://localhost:3005',
-  internalGatewaySecret:
-    process.env.INTERNAL_GATEWAY_SECRET || 'gateway-secret',
-}));
+const getNumberConfig = (
+  configService: NestConfigService,
+  key: string,
+  defaultValue: number,
+): number => {
+  return configService.get<number>(key, defaultValue);
+};
 
-export const rateLimitConfig = registerAs('rateLimit', () => ({
-  userService: {
-    windowMs:
-      parseInt(process.env.USER_RATE_LIMIT_WINDOW_MS || '', 10) ||
-      15 * 60 * 1000,
-    max: parseInt(process.env.USER_RATE_LIMIT_MAX || '', 10) || 100,
-  },
-  mediaService: {
-    windowMs:
-      parseInt(process.env.MEDIA_RATE_LIMIT_WINDOW_MS || '', 10) ||
-      15 * 60 * 1000,
-    max: parseInt(process.env.MEDIA_RATE_LIMIT_MAX || '', 10) || 100,
-  },
-  walletService: {
-    windowMs:
-      parseInt(process.env.WALLET_RATE_LIMIT_WINDOW_MS || '', 10) ||
-      15 * 60 * 1000,
-    max: parseInt(process.env.WALLET_RATE_LIMIT_MAX || '', 10) || 50,
-  },
-  paymentService: {
-    windowMs:
-      parseInt(process.env.PAYMENT_RATE_LIMIT_WINDOW_MS || '', 10) ||
-      15 * 60 * 1000,
-    max: parseInt(process.env.PAYMENT_RATE_LIMIT_MAX || '', 10) || 30,
-  },
-  processingService: {
-    windowMs:
-      parseInt(process.env.PROCESSING_RATE_LIMIT_WINDOW_MS || '', 10) ||
-      15 * 60 * 1000,
-    max: parseInt(process.env.PROCESSING_RATE_LIMIT_MAX || '', 10) || 20,
-  },
-}));
+export const serviceConfig = registerAs('services', () => {
+  const configService = new NestConfigService();
+
+  return {
+    identityServiceUrl:
+      configService.get<string>('IDENTITY_SERVICE_URL') ||
+      configService.get<string>('AUTH_SERVICE_URL') ||
+      'http://localhost:4000',
+
+    mediaServiceUrl: configService.get<string>(
+      'MEDIA_SERVICE_URL',
+      'http://localhost:4002',
+    ),
+
+    walletServiceUrl: configService.get<string>(
+      'WALLET_SERVICE_URL',
+      'http://localhost:3003',
+    ),
+
+    paymentServiceUrl: configService.get<string>(
+      'PAYMENT_SERVICE_URL',
+      'http://localhost:3004',
+    ),
+
+    processingServiceUrl: configService.get<string>(
+      'PROCESSING_SERVICE_URL',
+      'http://localhost:3005',
+    ),
+
+    internalGatewaySecret: configService.get<string>(
+      'INTERNAL_GATEWAY_SECRET',
+      'gateway-secret',
+    ),
+  };
+});
+
+export const rateLimitConfig = registerAs('rateLimit', () => {
+  const configService = new NestConfigService();
+
+  return {
+    userService: {
+      windowMs: getNumberConfig(
+        configService,
+        'USER_RATE_LIMIT_WINDOW_MS',
+        15 * 60 * 1000,
+      ),
+      max: getNumberConfig(configService, 'USER_RATE_LIMIT_MAX', 100),
+    },
+
+    mediaService: {
+      windowMs: getNumberConfig(
+        configService,
+        'MEDIA_RATE_LIMIT_WINDOW_MS',
+        15 * 60 * 1000,
+      ),
+      max: getNumberConfig(configService, 'MEDIA_RATE_LIMIT_MAX', 100),
+    },
+
+    walletService: {
+      windowMs: getNumberConfig(
+        configService,
+        'WALLET_RATE_LIMIT_WINDOW_MS',
+        15 * 60 * 1000,
+      ),
+      max: getNumberConfig(configService, 'WALLET_RATE_LIMIT_MAX', 50),
+    },
+
+    paymentService: {
+      windowMs: getNumberConfig(
+        configService,
+        'PAYMENT_RATE_LIMIT_WINDOW_MS',
+        15 * 60 * 1000,
+      ),
+      max: getNumberConfig(configService, 'PAYMENT_RATE_LIMIT_MAX', 30),
+    },
+
+    processingService: {
+      windowMs: getNumberConfig(
+        configService,
+        'PROCESSING_RATE_LIMIT_WINDOW_MS',
+        15 * 60 * 1000,
+      ),
+      max: getNumberConfig(configService, 'PROCESSING_RATE_LIMIT_MAX', 20),
+    },
+  };
+});
 
 export default serviceConfig;
 
 @Injectable()
 export class ServiceConfigService {
-  constructor(private readonly configService: NestConfigService) { }
+  constructor(private readonly configService: NestConfigService) {}
 
-  get authServiceUrl(): string {
+  get identityServiceUrl(): string {
     return this.configService.get<string>(
-      'services.authServiceUrl',
+      'services.identityServiceUrl',
       'http://localhost:4000',
-    );
-  }
-
-  get userServiceUrl(): string {
-    return this.configService.get<string>(
-      'services.userServiceUrl',
-      'http://localhost:3001',
     );
   }
 
   get mediaServiceUrl(): string {
     return this.configService.get<string>(
       'services.mediaServiceUrl',
-      'http://localhost:3002',
+      'http://localhost:4002',
     );
   }
 
@@ -104,10 +147,10 @@ export class ServiceConfigService {
 
   getServiceUrl(path: string): string | undefined {
     if (path.startsWith('/api/auth')) {
-      return this.authServiceUrl;
+      return this.identityServiceUrl;
     }
-    if (path.startsWith('/api/users')) {
-      return this.userServiceUrl;
+    if (path.startsWith('/api/user')) {
+      return this.identityServiceUrl;
     }
     if (path.startsWith('/api/media')) {
       return this.mediaServiceUrl;

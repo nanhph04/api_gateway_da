@@ -9,8 +9,8 @@ export class ProxyMiddleware implements NestMiddleware {
 
   constructor(private readonly serviceConfigService: ServiceConfigService) {
     const routeRules = {
-      '^/api/auth': this.serviceConfigService.authServiceUrl,
-      '^/api/users': this.serviceConfigService.userServiceUrl,
+      '^/api/auth': this.serviceConfigService.identityServiceUrl,
+      '^/api/user': this.serviceConfigService.identityServiceUrl,
       '^/api/media': this.serviceConfigService.mediaServiceUrl,
       '^/api/wallet': this.serviceConfigService.walletServiceUrl,
       '^/api/payment': this.serviceConfigService.paymentServiceUrl,
@@ -21,7 +21,7 @@ export class ProxyMiddleware implements NestMiddleware {
       if (target) {
         this.proxyMap[pattern] = proxy(target, {
           proxyReqPathResolver: (req) => {
-            return Promise.resolve(req.originalUrl);
+            return Promise.resolve(this.resolveProxyPath(req.originalUrl));
           },
           proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
             // Delete sensitive headers to prevent spoofing from external clients
@@ -56,6 +56,18 @@ export class ProxyMiddleware implements NestMiddleware {
     }
   }
 
+  private resolveProxyPath(originalUrl: string): string {
+    if (originalUrl.startsWith('/api/auth')) {
+      return originalUrl.replace(/^\/api\/auth/, '/api/identity/auth');
+    }
+
+    if (originalUrl.startsWith('/api/user')) {
+      return originalUrl.replace(/^\/api\/user/, '/api/identity/user');
+    }
+
+    return originalUrl;
+  }
+
   use(req: Request, res: Response, next: NextFunction) {
     const url = req.originalUrl;
     for (const [pattern, handler] of Object.entries(this.proxyMap)) {
@@ -66,3 +78,4 @@ export class ProxyMiddleware implements NestMiddleware {
     next();
   }
 }
+
