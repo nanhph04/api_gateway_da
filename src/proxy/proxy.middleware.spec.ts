@@ -27,7 +27,9 @@ describe('ProxyMiddleware', () => {
     ).resolves.toBe('/api/identity/auth/login');
 
     await expect(
-      authProxyOptions.proxyReqPathResolver({ originalUrl: '/api/auth/refresh' }),
+      authProxyOptions.proxyReqPathResolver({
+        originalUrl: '/api/auth/refresh',
+      }),
     ).resolves.toBe('/api/identity/auth/refresh');
   });
 

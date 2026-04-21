@@ -34,7 +34,8 @@ export class ProxyMiddleware implements NestMiddleware {
             if (srcReq['user']) {
               proxyReqOpts.headers['x-user-id'] = srcReq['user'].sub;
               proxyReqOpts.headers['x-user-email'] = srcReq['user'].email;
-              proxyReqOpts.headers['x-internal-secret'] = this.serviceConfigService.internalGatewaySecret;
+              proxyReqOpts.headers['x-internal-secret'] =
+                this.serviceConfigService.internalGatewaySecret;
               if (srcReq['user'].role) {
                 proxyReqOpts.headers['x-user-role'] = srcReq['user'].role;
               }
@@ -78,4 +79,3 @@ export class ProxyMiddleware implements NestMiddleware {
     next();
   }
 }
-
