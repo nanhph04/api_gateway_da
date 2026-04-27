@@ -1,10 +1,15 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response, NextFunction } from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import {
+  getRequestTargetService,
+  SERVICE_ROUTE_RULES,
+} from '../utils/service-routing.util';
 
 @Injectable()
 export class RateLimitMiddleware implements NestMiddleware {
+  private readonly logger = new Logger(RateLimitMiddleware.name);
   private limiters: Map<string, ReturnType<typeof rateLimit>> = new Map();
 
   constructor(private readonly configService: ConfigService) {
@@ -13,15 +18,16 @@ export class RateLimitMiddleware implements NestMiddleware {
 
   private initLimiters() {
     const rateLimitConfigs = {
-      '^/api/auth': 'userService',
-      '^/api/user': 'userService',
-      '^/api/media': 'mediaService',
-      '^/api/wallet': 'walletService',
-      '^/api/payment': 'paymentService',
-      '^/api/process': 'processingService',
-    };
+      identityService: 'userService',
+      mediaService: 'mediaService',
+      financeService: 'financeService',
+      walletService: 'walletService',
+      paymentService: 'paymentService',
+      processingService: 'processingService',
+    } as const;
 
-    for (const [pattern, configKey] of Object.entries(rateLimitConfigs)) {
+    for (const rule of SERVICE_ROUTE_RULES) {
+      const configKey = rateLimitConfigs[rule.serviceKey];
       const config = this.configService.get<{
         windowMs: number;
         max: number;
@@ -29,7 +35,7 @@ export class RateLimitMiddleware implements NestMiddleware {
 
       if (config) {
         this.limiters.set(
-          pattern,
+          rule.pattern.source,
           rateLimit({
             windowMs: config.windowMs,
             max: config.max,
@@ -39,6 +45,18 @@ export class RateLimitMiddleware implements NestMiddleware {
                 return user.sub;
               }
               return ipKeyGenerator(req.ip || 'unknown');
+            },
+            handler: (req: Request, res: Response) => {
+              const requestId = req['id'] || 'no-req-id';
+              const service = getRequestTargetService(req);
+              this.logger.warn(
+                `[${requestId}] [${service}] rate limit exceeded for ${req.method} ${req.originalUrl}`,
+              );
+              res.status(429).json({
+                success: false,
+                error:
+                  'Too many requests from this IP, please try again later.',
+              });
             },
             message: {
               success: false,

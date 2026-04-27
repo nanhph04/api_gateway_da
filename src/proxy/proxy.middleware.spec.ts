@@ -7,6 +7,7 @@ describe('ProxyMiddleware', () => {
   const serviceConfig = {
     identityServiceUrl: 'http://identity-service',
     mediaServiceUrl: 'http://media-service',
+    financeServiceUrl: 'http://finance-service',
     walletServiceUrl: '',
     paymentServiceUrl: '',
     processingServiceUrl: '',
@@ -55,5 +56,23 @@ describe('ProxyMiddleware', () => {
         originalUrl: '/api/media/videos/discovery/latest',
       }),
     ).resolves.toBe('/api/media/videos/discovery/latest');
+  });
+
+  it('rewrites finance routes to the finance-service api prefix', async () => {
+    new ProxyMiddleware(serviceConfig as never);
+
+    const financeProxyOptions = (proxy as jest.Mock).mock.calls[3][1];
+
+    await expect(
+      financeProxyOptions.proxyReqPathResolver({
+        originalUrl: '/api/finance/wallets/me',
+      }),
+    ).resolves.toBe('/api/wallets/me');
+
+    await expect(
+      financeProxyOptions.proxyReqPathResolver({
+        originalUrl: '/api/finance/payments',
+      }),
+    ).resolves.toBe('/api/payments');
   });
 });

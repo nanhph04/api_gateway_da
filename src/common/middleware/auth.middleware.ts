@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
+import { getRequestTargetService } from '../utils/service-routing.util';
 
 interface PublicRouteRule {
   method: string;
@@ -57,6 +58,7 @@ export class AuthMiddleware implements NestMiddleware {
   use(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     const path = req.path;
     const requestId = req.id || 'n/a';
+    const service = getRequestTargetService(req);
 
     if (
       this.publicRoutes.has(path) ||
@@ -68,7 +70,7 @@ export class AuthMiddleware implements NestMiddleware {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       this.logger.warn(
-        `[${requestId}] ${req.method} ${path} rejected: missing or invalid Authorization header`,
+        `[${requestId}] [${service}] ${req.method} ${path} rejected: missing or invalid Authorization header`,
       );
       throw new UnauthorizedException(
         'Missing or invalid Authorization header',
@@ -78,7 +80,7 @@ export class AuthMiddleware implements NestMiddleware {
     const token = authHeader.split(' ')[1];
     if (!token) {
       this.logger.warn(
-        `[${requestId}] ${req.method} ${path} rejected: empty bearer token`,
+        `[${requestId}] [${service}] ${req.method} ${path} rejected: empty bearer token`,
       );
       throw new UnauthorizedException(
         'Missing or invalid Authorization header',
@@ -90,22 +92,14 @@ export class AuthMiddleware implements NestMiddleware {
         process.env.ACCESS_TOKEN_SECRET ||
         process.env.JWT_SECRET ||
         'dev-access-secret';
-      const secretSource = this.getJwtSecretSource();
-
-      this.logger.log(
-        `[${requestId}] ${req.method} ${path} verifying JWT: secretSource=${secretSource}, ${this.getTokenSummary(token)}`,
-      );
 
       const decoded = jwt.verify(token, secret);
 
       req.user = decoded;
-      this.logger.log(
-        `[${requestId}] ${req.method} ${path} JWT verified: ${this.getDecodedUserSummary(decoded)}`,
-      );
       next();
     } catch (error) {
       this.logger.warn(
-        `[${requestId}] ${req.method} ${path} JWT verification failed: ${this.getJwtErrorSummary(error)}, ${this.getTokenSummary(token)}`,
+        `[${requestId}] [${service}] ${req.method} ${path} JWT verification failed: ${this.getJwtErrorSummary(error)}, ${this.getTokenSummary(token)}`,
       );
       throw new UnauthorizedException('Invalid or expired token');
     }
@@ -115,16 +109,6 @@ export class AuthMiddleware implements NestMiddleware {
     return this.publicMediaRoutes.some(
       (route) => route.method === method && route.pattern.test(path),
     );
-  }
-
-  private getJwtSecretSource(): string {
-    if (process.env.ACCESS_TOKEN_SECRET) {
-      return 'ACCESS_TOKEN_SECRET';
-    }
-    if (process.env.JWT_SECRET) {
-      return 'JWT_SECRET';
-    }
-    return 'default-dev-access-secret';
   }
 
   private getTokenSummary(token: string): string {
@@ -152,18 +136,6 @@ export class AuthMiddleware implements NestMiddleware {
       `role=${payload?.role || 'none'}`,
       `iat=${iat}`,
       `exp=${exp}`,
-    ].join(', ');
-  }
-
-  private getDecodedUserSummary(decoded: string | jwt.JwtPayload): string {
-    if (typeof decoded === 'string') {
-      return 'payload=string';
-    }
-
-    return [
-      `sub=${decoded.sub || 'none'}`,
-      `email=${decoded.email || 'none'}`,
-      `role=${decoded.role || 'none'}`,
     ].join(', ');
   }
 

@@ -1,27 +1,27 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
 import { ServiceConfigService } from '../config/service.config';
 import { Request, Response, NextFunction } from 'express';
 import proxy from 'express-http-proxy';
+import {
+  getRequestTargetService,
+  resolveProxyPath,
+  SERVICE_ROUTE_RULES,
+  setRequestTargetService,
+} from '../common/utils/service-routing.util';
 
 @Injectable()
 export class ProxyMiddleware implements NestMiddleware {
+  private readonly logger = new Logger(ProxyMiddleware.name);
   private proxyMap: Record<string, ReturnType<typeof proxy>> = {};
 
   constructor(private readonly serviceConfigService: ServiceConfigService) {
-    const routeRules = {
-      '^/api/auth': this.serviceConfigService.identityServiceUrl,
-      '^/api/user': this.serviceConfigService.identityServiceUrl,
-      '^/api/media': this.serviceConfigService.mediaServiceUrl,
-      '^/api/wallet': this.serviceConfigService.walletServiceUrl,
-      '^/api/payment': this.serviceConfigService.paymentServiceUrl,
-      '^/api/process': this.serviceConfigService.processingServiceUrl,
-    };
+    for (const rule of SERVICE_ROUTE_RULES) {
+      const target = this.resolveTargetUrl(rule.serviceKey);
 
-    for (const [pattern, target] of Object.entries(routeRules)) {
       if (target) {
-        this.proxyMap[pattern] = proxy(target, {
+        this.proxyMap[rule.pattern.source] = proxy(target, {
           proxyReqPathResolver: (req) => {
-            return Promise.resolve(this.resolveProxyPath(req.originalUrl));
+            return Promise.resolve(resolveProxyPath(req.originalUrl));
           },
           proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
             // Delete sensitive headers to prevent spoofing from external clients
@@ -46,7 +46,11 @@ export class ProxyMiddleware implements NestMiddleware {
             return proxyReqOpts;
           },
           onError: (err, req, res) => {
-            console.error(`[Proxy] Error: ${err.message}`);
+            const requestId = req['id'] || 'no-req-id';
+            const service = getRequestTargetService(req as Request);
+            this.logger.error(
+              `[${requestId}] [${service}] proxy error for ${req.method} ${req.originalUrl}: ${err.message}`,
+            );
             res.status(502).json({
               success: false,
               error: 'Bad Gateway',
@@ -57,20 +61,27 @@ export class ProxyMiddleware implements NestMiddleware {
     }
   }
 
-  private resolveProxyPath(originalUrl: string): string {
-    if (originalUrl.startsWith('/api/auth')) {
-      return originalUrl.replace(/^\/api\/auth/, '/api/identity/auth');
+  private resolveTargetUrl(serviceKey: string): string | undefined {
+    if (typeof this.serviceConfigService.getServiceUrlByKey === 'function') {
+      return this.serviceConfigService.getServiceUrlByKey(serviceKey);
     }
 
-    if (originalUrl.startsWith('/api/user')) {
-      return originalUrl.replace(/^\/api\/user/, '/api/identity/user');
-    }
+    const serviceUrlMap: Record<string, string | undefined> = {
+      identityService: this.serviceConfigService.identityServiceUrl,
+      mediaService: this.serviceConfigService.mediaServiceUrl,
+      financeService: this.serviceConfigService.financeServiceUrl,
+      walletService: this.serviceConfigService.walletServiceUrl,
+      paymentService: this.serviceConfigService.paymentServiceUrl,
+      processingService: this.serviceConfigService.processingServiceUrl,
+    };
 
-    return originalUrl;
+    return serviceUrlMap[serviceKey];
   }
 
   use(req: Request, res: Response, next: NextFunction) {
     const url = req.originalUrl;
+    setRequestTargetService(req);
+
     for (const [pattern, handler] of Object.entries(this.proxyMap)) {
       if (new RegExp(pattern).test(url)) {
         return handler(req, res, next);

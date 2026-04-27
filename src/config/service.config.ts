@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
 import { registerAs } from '@nestjs/config';
+import { resolveServiceRule } from '../common/utils/service-routing.util';
 
 const getNumberConfig = (
   configService: NestConfigService,
@@ -22,6 +23,11 @@ export const serviceConfig = registerAs('services', () => {
     mediaServiceUrl: configService.get<string>(
       'MEDIA_SERVICE_URL',
       'http://localhost:4002',
+    ),
+
+    financeServiceUrl: configService.get<string>(
+      'FINANCE_SERVICE_URL',
+      'http://localhost:4004',
     ),
 
     walletServiceUrl: configService.get<string>(
@@ -68,6 +74,15 @@ export const rateLimitConfig = registerAs('rateLimit', () => {
       max: getNumberConfig(configService, 'MEDIA_RATE_LIMIT_MAX', 100),
     },
 
+    financeService: {
+      windowMs: getNumberConfig(
+        configService,
+        'FINANCE_RATE_LIMIT_WINDOW_MS',
+        15 * 60 * 1000,
+      ),
+      max: getNumberConfig(configService, 'FINANCE_RATE_LIMIT_MAX', 100),
+    },
+
     walletService: {
       windowMs: getNumberConfig(
         configService,
@@ -103,6 +118,25 @@ export default serviceConfig;
 export class ServiceConfigService {
   constructor(private readonly configService: NestConfigService) {}
 
+  getServiceUrlByKey(serviceKey: string): string | undefined {
+    switch (serviceKey) {
+      case 'identityService':
+        return this.identityServiceUrl;
+      case 'mediaService':
+        return this.mediaServiceUrl;
+      case 'financeService':
+        return this.financeServiceUrl;
+      case 'walletService':
+        return this.walletServiceUrl;
+      case 'paymentService':
+        return this.paymentServiceUrl;
+      case 'processingService':
+        return this.processingServiceUrl;
+      default:
+        return undefined;
+    }
+  }
+
   get identityServiceUrl(): string {
     return this.configService.get<string>(
       'services.identityServiceUrl',
@@ -114,6 +148,13 @@ export class ServiceConfigService {
     return this.configService.get<string>(
       'services.mediaServiceUrl',
       'http://localhost:4002',
+    );
+  }
+
+  get financeServiceUrl(): string {
+    return this.configService.get<string>(
+      'services.financeServiceUrl',
+      'http://localhost:4004',
     );
   }
 
@@ -146,24 +187,7 @@ export class ServiceConfigService {
   }
 
   getServiceUrl(path: string): string | undefined {
-    if (path.startsWith('/api/auth')) {
-      return this.identityServiceUrl;
-    }
-    if (path.startsWith('/api/user')) {
-      return this.identityServiceUrl;
-    }
-    if (path.startsWith('/api/media')) {
-      return this.mediaServiceUrl;
-    }
-    if (path.startsWith('/api/wallet')) {
-      return this.walletServiceUrl;
-    }
-    if (path.startsWith('/api/payment')) {
-      return this.paymentServiceUrl;
-    }
-    if (path.startsWith('/api/process')) {
-      return this.processingServiceUrl;
-    }
-    return undefined;
+    const serviceKey = resolveServiceRule(path)?.serviceKey;
+    return serviceKey ? this.getServiceUrlByKey(serviceKey) : undefined;
   }
 }

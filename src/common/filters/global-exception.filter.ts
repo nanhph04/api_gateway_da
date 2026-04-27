@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { getRequestTargetService } from '../utils/service-routing.util';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -33,9 +34,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         : 'Internal server error';
 
     const reqId = request['id'] || 'no-req-id';
+    const service = getRequestTargetService(request);
 
     this.logger.error(
-      `[${reqId}] ${request.method} ${request.originalUrl} - Error: ${JSON.stringify(message)}`,
+      `[${reqId}] [${service}] ${request.method} ${request.originalUrl} - Error: ${JSON.stringify(message)}`,
     );
 
     response.status(status).json({
