@@ -32,6 +32,31 @@ export const SERVICE_ROUTE_RULES: ServiceRouteRule[] = [
     targetPathPrefix: '/api',
   },
   {
+    serviceKey: 'financeService',
+    serviceName: 'finance',
+    pattern: /^\/api\/deposits/,
+  },
+  {
+    serviceKey: 'financeService',
+    serviceName: 'finance',
+    pattern: /^\/api\/wallets/,
+  },
+  {
+    serviceKey: 'financeService',
+    serviceName: 'finance',
+    pattern: /^\/api\/payments/,
+  },
+  {
+    serviceKey: 'financeService',
+    serviceName: 'finance',
+    pattern: /^\/api\/transactions/,
+  },
+  {
+    serviceKey: 'financeService',
+    serviceName: 'finance',
+    pattern: /^\/api\/withdrawals/,
+  },
+  {
     serviceKey: 'walletService',
     serviceName: 'wallet',
     pattern: /^\/api\/wallet/,

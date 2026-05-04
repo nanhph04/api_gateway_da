@@ -75,4 +75,23 @@ describe('ProxyMiddleware', () => {
       }),
     ).resolves.toBe('/api/payments');
   });
+
+  it('forwards direct finance resource routes to finance-service without rewriting', async () => {
+    new ProxyMiddleware(serviceConfig as never);
+
+    const depositsProxyOptions = (proxy as jest.Mock).mock.calls[4][1];
+    const walletsProxyOptions = (proxy as jest.Mock).mock.calls[5][1];
+
+    await expect(
+      depositsProxyOptions.proxyReqPathResolver({
+        originalUrl: '/api/deposits/packages',
+      }),
+    ).resolves.toBe('/api/deposits/packages');
+
+    await expect(
+      walletsProxyOptions.proxyReqPathResolver({
+        originalUrl: '/api/wallets/me',
+      }),
+    ).resolves.toBe('/api/wallets/me');
+  });
 });
