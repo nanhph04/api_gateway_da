@@ -1,7 +1,11 @@
 import proxy from 'express-http-proxy';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { ProxyMiddleware } from './proxy.middleware';
 
 jest.mock('express-http-proxy', () => jest.fn(() => jest.fn()));
+jest.mock('http-proxy-middleware', () => ({
+  createProxyMiddleware: jest.fn(() => jest.fn()),
+}));
 
 describe('ProxyMiddleware', () => {
   const serviceConfig = {
@@ -93,5 +97,16 @@ describe('ProxyMiddleware', () => {
         originalUrl: '/api/wallets/me',
       }),
     ).resolves.toBe('/api/wallets/me');
+  });
+
+  it('creates a dedicated SSE proxy for media progress streams', () => {
+    new ProxyMiddleware(serviceConfig as never);
+
+    expect(createProxyMiddleware).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: 'http://media-service',
+        changeOrigin: true,
+      }),
+    );
   });
 });
