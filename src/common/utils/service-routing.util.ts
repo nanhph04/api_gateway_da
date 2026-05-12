@@ -213,6 +213,11 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   ),
   mediaRoute(
     'GET',
+    /^\/api\/media\/videos\/library\/purchased\/?$/,
+    'protected',
+  ),
+  mediaRoute(
+    'GET',
     /^\/api\/media\/videos\/continue-watching\/?$/,
     'protected',
   ),

@@ -26,6 +26,20 @@ describe('service routing manifest', () => {
     ).toBe('protected');
   });
 
+  it('routes purchased video library requests to the protected media service', () => {
+    const entry = resolveRouteManifestEntry(
+      'GET',
+      '/api/media/videos/library/purchased?page=1&limit=20',
+    );
+
+    expect(entry?.serviceKey).toBe('mediaService');
+    expect(entry?.authPolicy).toBe('protected');
+    expect(entry?.requiresInternalSecret).toBe(true);
+    expect(resolveProxyPath('GET', '/api/media/videos/library/purchased')).toBe(
+      '/api/media/videos/library/purchased',
+    );
+  });
+
   it('rewrites namespaced finance routes to the finance service api prefix', () => {
     expect(resolveProxyPath('GET', '/api/finance/wallets/me')).toBe(
       '/api/wallets/me',
