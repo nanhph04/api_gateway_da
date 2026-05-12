@@ -32,7 +32,15 @@ export class AuthMiddleware implements NestMiddleware {
     '/api/auth/refresh',
   ]);
 
+  private readonly authSessionRoutes = new Set<string>([
+    '/api/auth/session/profile',
+  ]);
+
   private readonly publicMediaRoutes: PublicRouteRule[] = [
+    {
+      method: 'GET',
+      pattern: /^\/api\/media\/categories$/,
+    },
     {
       method: 'GET',
       pattern: /^\/api\/media\/channels\/[^/]+$/,
@@ -62,6 +70,7 @@ export class AuthMiddleware implements NestMiddleware {
 
     if (
       this.publicRoutes.has(path) ||
+      this.authSessionRoutes.has(path) ||
       this.isPublicMediaRoute(req.method, path)
     ) {
       return next();

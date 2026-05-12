@@ -9,6 +9,8 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
 import { AuthMiddleware } from './common/middleware/auth.middleware';
 import { ProxyMiddleware } from './proxy/proxy.middleware';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -17,7 +19,8 @@ import { ProxyMiddleware } from './proxy/proxy.middleware';
       load: [serviceConfig, rateLimitConfig],
     }),
   ],
-  providers: [ServiceConfigService],
+  controllers: [AppController],
+  providers: [ServiceConfigService, AppService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

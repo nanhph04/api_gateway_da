@@ -34,6 +34,8 @@ export class ProxyMiddleware implements NestMiddleware {
           proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
             return this.decorateProxyRequestOptions(proxyReqOpts, srcReq);
           },
+          userResHeaderDecorator: (headers, userReq) =>
+            this.decorateProxyResponseHeaders(headers, userReq as Request),
           onError: (err, req, res) => {
             this.handleProxyError(err, req as Request, res);
           },
@@ -126,6 +128,40 @@ export class ProxyMiddleware implements NestMiddleware {
     }
 
     return proxyReqOpts;
+  }
+
+  private decorateProxyResponseHeaders(
+    headers: Record<string, string | string[] | undefined>,
+    userReq: Request,
+  ): Record<string, string | string[] | undefined> {
+    const setCookieHeader = headers['set-cookie'];
+    if (!setCookieHeader || !/^\/api\/auth/.test(userReq.originalUrl)) {
+      return headers;
+    }
+
+    return {
+      ...headers,
+      'set-cookie': this.rewriteIdentityAuthCookiePath(setCookieHeader),
+    };
+  }
+
+  private rewriteIdentityAuthCookiePath(
+    setCookieHeader: string | string[],
+  ): string | string[] {
+    if (Array.isArray(setCookieHeader)) {
+      return setCookieHeader.map((cookie) =>
+        this.rewriteIdentityAuthCookiePathValue(cookie),
+      );
+    }
+
+    return this.rewriteIdentityAuthCookiePathValue(setCookieHeader);
+  }
+
+  private rewriteIdentityAuthCookiePathValue(cookie: string): string {
+    return cookie.replace(
+      /Path=\/api\/identity\/auth(?=;|$)/i,
+      'Path=/api/auth',
+    );
   }
 
   private setForwardHeaders(

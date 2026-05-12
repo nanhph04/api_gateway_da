@@ -38,6 +38,42 @@ describe('ProxyMiddleware', () => {
     ).resolves.toBe('/api/identity/auth/refresh');
   });
 
+  it('preserves auth set-cookie headers and rewrites internal identity cookie paths', () => {
+    new ProxyMiddleware(serviceConfig as never);
+
+    const authProxyOptions = (proxy as jest.Mock).mock.calls[0][1];
+    const headers = authProxyOptions.userResHeaderDecorator(
+      {
+        'set-cookie': [
+          'refresh_token=token; Path=/api/identity/auth; HttpOnly; SameSite=Strict',
+        ],
+      },
+      { originalUrl: '/api/auth/login' },
+    );
+
+    expect(headers['set-cookie']).toEqual([
+      'refresh_token=token; Path=/api/auth; HttpOnly; SameSite=Strict',
+    ]);
+  });
+
+  it('leaves non-auth set-cookie paths unchanged', () => {
+    new ProxyMiddleware(serviceConfig as never);
+
+    const userProxyOptions = (proxy as jest.Mock).mock.calls[1][1];
+    const headers = userProxyOptions.userResHeaderDecorator(
+      {
+        'set-cookie': [
+          'refresh_token=token; Path=/api/identity/auth; HttpOnly; SameSite=Strict',
+        ],
+      },
+      { originalUrl: '/api/user/users/profile' },
+    );
+
+    expect(headers['set-cookie']).toEqual([
+      'refresh_token=token; Path=/api/identity/auth; HttpOnly; SameSite=Strict',
+    ]);
+  });
+
   it('rewrites user routes to the identity-service prefix', async () => {
     new ProxyMiddleware(serviceConfig as never);
 
