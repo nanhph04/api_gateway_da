@@ -4,82 +4,64 @@ import {
   NestMiddleware,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
-import { getRequestTargetService } from '../utils/service-routing.util';
-
-interface PublicRouteRule {
-  method: string;
-  pattern: RegExp;
-}
+import {
+  getRequestRouteManifestEntry,
+  getRequestTargetService,
+} from '../utils/service-routing.util';
 
 interface AuthenticatedRequest extends Request {
   id?: string;
-  user?: string | jwt.JwtPayload;
+  user?: jwt.JwtPayload;
 }
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
   private readonly logger = new Logger(AuthMiddleware.name);
 
-  private readonly publicRoutes = new Set<string>([
-    '/api/auth/register',
-    '/api/auth/login',
-    '/api/auth/verify-email',
-    '/api/auth/resend-otp',
-    '/api/auth/forgot-password',
-    '/api/auth/reset-password',
-    '/api/auth/refresh',
-  ]);
-
-  private readonly authSessionRoutes = new Set<string>([
-    '/api/auth/session/profile',
-  ]);
-
-  private readonly publicMediaRoutes: PublicRouteRule[] = [
-    {
-      method: 'GET',
-      pattern: /^\/api\/media\/categories$/,
-    },
-    {
-      method: 'GET',
-      pattern: /^\/api\/media\/channels\/[^/]+$/,
-    },
-    {
-      method: 'GET',
-      pattern: /^\/api\/media\/videos\/discovery\/latest$/,
-    },
-    {
-      method: 'GET',
-      pattern: /^\/api\/media\/videos\/discovery\/by-category$/,
-    },
-    {
-      method: 'GET',
-      pattern: /^\/api\/media\/stream\/[^/]+\/master\.m3u8$/,
-    },
-    {
-      method: 'GET',
-      pattern: /^\/api\/media\/stream\/[^/]+\/segments\/[^/]+$/,
-    },
-  ];
-
-  use(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  use(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
+    const entry = getRequestRouteManifestEntry(req);
     const path = req.path;
     const requestId = req.id || 'n/a';
     const service = getRequestTargetService(req);
+    const authPolicy = entry?.authPolicy ?? 'protected';
 
     if (
-      this.publicRoutes.has(path) ||
-      this.authSessionRoutes.has(path) ||
-      this.isPublicMediaRoute(req.method, path)
+      authPolicy === 'public' ||
+      authPolicy === 'cookieAuth' ||
+      authPolicy === 'webhook'
     ) {
-      return next();
+      next();
+      return;
     }
 
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      this.logger.warn(
-        `[${requestId}] [${service}] ${req.method} ${path} rejected: missing or invalid Authorization header`,
+    if (!authHeader) {
+      if (authPolicy === 'optional') {
+        next();
+        return;
+      }
+
+      this.logRejectedRequest(
+        requestId,
+        service,
+        req.method,
+        path,
+        'missing Authorization header',
+      );
+      throw new UnauthorizedException(
+        'Missing or invalid Authorization header',
+      );
+    }
+
+    if (!authHeader.startsWith('Bearer ')) {
+      this.logRejectedRequest(
+        requestId,
+        service,
+        req.method,
+        path,
+        'invalid Authorization header',
       );
       throw new UnauthorizedException(
         'Missing or invalid Authorization header',
@@ -88,8 +70,12 @@ export class AuthMiddleware implements NestMiddleware {
 
     const token = authHeader.split(' ')[1];
     if (!token) {
-      this.logger.warn(
-        `[${requestId}] [${service}] ${req.method} ${path} rejected: empty bearer token`,
+      this.logRejectedRequest(
+        requestId,
+        service,
+        req.method,
+        path,
+        'empty bearer token',
       );
       throw new UnauthorizedException(
         'Missing or invalid Authorization header',
@@ -97,14 +83,7 @@ export class AuthMiddleware implements NestMiddleware {
     }
 
     try {
-      const secret =
-        process.env.ACCESS_TOKEN_SECRET ||
-        process.env.JWT_SECRET ||
-        'dev-access-secret';
-
-      const decoded = jwt.verify(token, secret);
-
-      req.user = decoded;
+      req.user = this.verifyAccessToken(token);
       next();
     } catch (error) {
       this.logger.warn(
@@ -114,9 +93,29 @@ export class AuthMiddleware implements NestMiddleware {
     }
   }
 
-  private isPublicMediaRoute(method: string, path: string): boolean {
-    return this.publicMediaRoutes.some(
-      (route) => route.method === method && route.pattern.test(path),
+  private verifyAccessToken(token: string): jwt.JwtPayload {
+    const secret =
+      process.env.ACCESS_TOKEN_SECRET ||
+      process.env.JWT_SECRET ||
+      'dev-access-secret';
+
+    const decoded = jwt.verify(token, secret);
+    if (!decoded || typeof decoded === 'string') {
+      throw new jwt.JsonWebTokenError('JWT payload must be an object');
+    }
+
+    return decoded;
+  }
+
+  private logRejectedRequest(
+    requestId: string,
+    service: string,
+    method: string,
+    path: string,
+    reason: string,
+  ): void {
+    this.logger.warn(
+      `[${requestId}] [${service}] ${method} ${path} rejected: ${reason}`,
     );
   }
 

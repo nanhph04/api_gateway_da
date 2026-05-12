@@ -4,11 +4,14 @@ import { Request, Response, NextFunction } from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import {
   getRequestTargetService,
-  SERVICE_ROUTE_RULES,
+  ROUTE_MANIFEST,
 } from '../utils/service-routing.util';
+import { buildApiError } from '../utils/api-error.util';
 
 @Injectable()
 export class RateLimitMiddleware implements NestMiddleware {
+  private static readonly LIMITER_KEY_SEPARATOR = '\u0000';
+
   private readonly logger = new Logger(RateLimitMiddleware.name);
   private limiters: Map<string, ReturnType<typeof rateLimit>> = new Map();
 
@@ -26,8 +29,9 @@ export class RateLimitMiddleware implements NestMiddleware {
       processingService: 'processingService',
     } as const;
 
-    for (const rule of SERVICE_ROUTE_RULES) {
-      const configKey = rateLimitConfigs[rule.serviceKey];
+    for (const rule of ROUTE_MANIFEST) {
+      const configKey =
+        rateLimitConfigs[rule.rateLimitBucket as keyof typeof rateLimitConfigs];
       const config = this.configService.get<{
         windowMs: number;
         max: number;
@@ -35,7 +39,7 @@ export class RateLimitMiddleware implements NestMiddleware {
 
       if (config) {
         this.limiters.set(
-          rule.pattern.source,
+          `${rule.method}${RateLimitMiddleware.LIMITER_KEY_SEPARATOR}${rule.publicPathPattern.source}`,
           rateLimit({
             windowMs: config.windowMs,
             max: config.max,
@@ -52,15 +56,18 @@ export class RateLimitMiddleware implements NestMiddleware {
               this.logger.warn(
                 `[${requestId}] [${service}] rate limit exceeded for ${req.method} ${req.originalUrl}`,
               );
-              res.status(429).json({
-                success: false,
-                error:
-                  'Too many requests from this IP, please try again later.',
-              });
+              const mess =
+                'Too many requests from this IP, please try again later.';
+              res.status(429).json(buildApiError(req, 429, mess));
             },
             message: {
               success: false,
-              error: 'Too many requests from this IP, please try again later.',
+              code: 429,
+              mess: 'Too many requests from this IP, please try again later.',
+              data: null,
+              errors: [
+                'Too many requests from this IP, please try again later.',
+              ],
             },
           }),
         );
@@ -69,10 +76,16 @@ export class RateLimitMiddleware implements NestMiddleware {
   }
 
   use(req: Request, res: Response, next: NextFunction) {
-    const path = req.path;
+    const method = req.method.toUpperCase();
 
-    for (const [pattern, limiter] of this.limiters.entries()) {
-      if (new RegExp(pattern).test(path)) {
+    for (const [key, limiter] of this.limiters.entries()) {
+      const [ruleMethod, pattern] = key.split(
+        RateLimitMiddleware.LIMITER_KEY_SEPARATOR,
+      );
+      if (
+        (ruleMethod === 'ALL' || ruleMethod === method) &&
+        new RegExp(pattern).test(req.path)
+      ) {
         return limiter(req, res, next);
       }
     }

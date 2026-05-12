@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
 import { registerAs } from '@nestjs/config';
-import { resolveServiceRule } from '../common/utils/service-routing.util';
+import type { ServiceKey } from '../common/utils/service-routing.util';
+import { resolveRouteManifestEntry } from '../common/utils/service-routing.util';
 
 const getNumberConfig = (
   configService: NestConfigService,
@@ -49,6 +50,21 @@ export const serviceConfig = registerAs('services', () => {
       'INTERNAL_GATEWAY_SECRET',
       'gateway-secret',
     ),
+
+    identityInternalGatewaySecret:
+      configService.get<string>('IDENTITY_INTERNAL_GATEWAY_SECRET') ||
+      configService.get<string>('INTERNAL_GATEWAY_SECRET') ||
+      'gateway-secret',
+
+    mediaInternalGatewaySecret:
+      configService.get<string>('MEDIA_INTERNAL_GATEWAY_SECRET') ||
+      configService.get<string>('INTERNAL_GATEWAY_SECRET') ||
+      'gateway-secret',
+
+    financeInternalGatewaySecret:
+      configService.get<string>('FINANCE_INTERNAL_GATEWAY_SECRET') ||
+      configService.get<string>('INTERNAL_GATEWAY_SECRET') ||
+      'gateway-secret',
   };
 });
 
@@ -186,8 +202,42 @@ export class ServiceConfigService {
     );
   }
 
-  getServiceUrl(path: string): string | undefined {
-    const serviceKey = resolveServiceRule(path)?.serviceKey;
+  get identityInternalGatewaySecret(): string {
+    return this.configService.get<string>(
+      'services.identityInternalGatewaySecret',
+      this.internalGatewaySecret,
+    );
+  }
+
+  get mediaInternalGatewaySecret(): string {
+    return this.configService.get<string>(
+      'services.mediaInternalGatewaySecret',
+      this.internalGatewaySecret,
+    );
+  }
+
+  get financeInternalGatewaySecret(): string {
+    return this.configService.get<string>(
+      'services.financeInternalGatewaySecret',
+      this.internalGatewaySecret,
+    );
+  }
+
+  getInternalGatewaySecretByServiceKey(serviceKey: ServiceKey): string {
+    switch (serviceKey) {
+      case 'identityService':
+        return this.identityInternalGatewaySecret;
+      case 'mediaService':
+        return this.mediaInternalGatewaySecret;
+      case 'financeService':
+        return this.financeInternalGatewaySecret;
+      default:
+        return this.internalGatewaySecret;
+    }
+  }
+
+  getServiceUrl(path: string, method = 'GET'): string | undefined {
+    const serviceKey = resolveRouteManifestEntry(method, path)?.serviceKey;
     return serviceKey ? this.getServiceUrlByKey(serviceKey) : undefined;
   }
 }

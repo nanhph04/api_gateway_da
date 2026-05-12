@@ -12,61 +12,93 @@ describe('ProxyMiddleware', () => {
     identityServiceUrl: 'http://identity-service',
     mediaServiceUrl: 'http://media-service',
     financeServiceUrl: 'http://finance-service',
-    walletServiceUrl: '',
-    paymentServiceUrl: '',
-    processingServiceUrl: '',
     internalGatewaySecret: 'gateway-secret',
+    getServiceUrlByKey: jest.fn((serviceKey: string) => {
+      const urls: Record<string, string> = {
+        identityService: 'http://identity-service',
+        mediaService: 'http://media-service',
+        financeService: 'http://finance-service',
+      };
+      return urls[serviceKey];
+    }),
+    getInternalGatewaySecretByServiceKey: jest.fn((serviceKey: string) => {
+      const secrets: Record<string, string> = {
+        identityService: 'identity-secret',
+        mediaService: 'media-secret',
+        financeService: 'finance-secret',
+      };
+      return secrets[serviceKey];
+    }),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('rewrites public auth routes to the identity-service prefix', async () => {
+  const getProxyOptions = (target: string, callIndex = 0): any => {
+    const calls = (proxy as jest.Mock).mock.calls.filter(
+      ([callTarget]) => callTarget === target,
+    );
+    return calls[callIndex][1];
+  };
+
+  it('rewrites auth routes to the identity-service prefix', async () => {
     new ProxyMiddleware(serviceConfig as never);
 
-    const authProxyOptions = (proxy as jest.Mock).mock.calls[0][1];
+    const authProxyOptions = getProxyOptions('http://identity-service');
 
     await expect(
-      authProxyOptions.proxyReqPathResolver({ originalUrl: '/api/auth/login' }),
+      authProxyOptions.proxyReqPathResolver({
+        method: 'POST',
+        originalUrl: '/api/auth/login',
+      }),
     ).resolves.toBe('/api/identity/auth/login');
 
     await expect(
       authProxyOptions.proxyReqPathResolver({
-        originalUrl: '/api/auth/refresh',
+        method: 'POST',
+        originalUrl: '/api/auth/refresh?source=web',
       }),
-    ).resolves.toBe('/api/identity/auth/refresh');
+    ).resolves.toBe('/api/identity/auth/refresh?source=web');
   });
 
-  it('preserves auth set-cookie headers and rewrites internal identity cookie paths', () => {
+  it('preserves multiple auth set-cookie headers and rewrites internal identity cookie paths', () => {
     new ProxyMiddleware(serviceConfig as never);
 
-    const authProxyOptions = (proxy as jest.Mock).mock.calls[0][1];
+    const authProxyOptions = getProxyOptions('http://identity-service');
     const headers = authProxyOptions.userResHeaderDecorator(
       {
         'set-cookie': [
           'refresh_token=token; Path=/api/identity/auth; HttpOnly; SameSite=Strict',
+          'other=value; Path=/api/identity/auth; HttpOnly',
         ],
       },
-      { originalUrl: '/api/auth/login' },
+      {
+        method: 'POST',
+        originalUrl: '/api/auth/login',
+      },
     );
 
     expect(headers['set-cookie']).toEqual([
       'refresh_token=token; Path=/api/auth; HttpOnly; SameSite=Strict',
+      'other=value; Path=/api/auth; HttpOnly',
     ]);
   });
 
-  it('leaves non-auth set-cookie paths unchanged', () => {
+  it('leaves non-identity set-cookie paths unchanged', () => {
     new ProxyMiddleware(serviceConfig as never);
 
-    const userProxyOptions = (proxy as jest.Mock).mock.calls[1][1];
-    const headers = userProxyOptions.userResHeaderDecorator(
+    const mediaProxyOptions = getProxyOptions('http://media-service');
+    const headers = mediaProxyOptions.userResHeaderDecorator(
       {
         'set-cookie': [
           'refresh_token=token; Path=/api/identity/auth; HttpOnly; SameSite=Strict',
         ],
       },
-      { originalUrl: '/api/user/users/profile' },
+      {
+        method: 'GET',
+        originalUrl: '/api/media/categories',
+      },
     );
 
     expect(headers['set-cookie']).toEqual([
@@ -77,62 +109,137 @@ describe('ProxyMiddleware', () => {
   it('rewrites user routes to the identity-service prefix', async () => {
     new ProxyMiddleware(serviceConfig as never);
 
-    const userProxyOptions = (proxy as jest.Mock).mock.calls[1][1];
+    const userProxyOptions = getProxyOptions('http://identity-service');
 
     await expect(
       userProxyOptions.proxyReqPathResolver({
+        method: 'GET',
         originalUrl: '/api/user/users/profile',
       }),
     ).resolves.toBe('/api/identity/user/users/profile');
   });
 
-  it('leaves non-identity service paths unchanged', async () => {
+  it('leaves media service paths unchanged', async () => {
     new ProxyMiddleware(serviceConfig as never);
 
-    const mediaProxyOptions = (proxy as jest.Mock).mock.calls[2][1];
+    const mediaProxyOptions = getProxyOptions('http://media-service');
 
     await expect(
       mediaProxyOptions.proxyReqPathResolver({
-        originalUrl: '/api/media/videos/discovery/latest',
+        method: 'GET',
+        originalUrl: '/api/media/videos/discovery/latest?limit=10',
       }),
-    ).resolves.toBe('/api/media/videos/discovery/latest');
+    ).resolves.toBe('/api/media/videos/discovery/latest?limit=10');
   });
 
-  it('rewrites finance routes to the finance-service api prefix', async () => {
+  it('rewrites namespaced finance routes to the finance-service api prefix', async () => {
     new ProxyMiddleware(serviceConfig as never);
 
-    const financeProxyOptions = (proxy as jest.Mock).mock.calls[3][1];
+    const financeProxyOptions = getProxyOptions('http://finance-service');
 
     await expect(
       financeProxyOptions.proxyReqPathResolver({
+        method: 'GET',
         originalUrl: '/api/finance/wallets/me',
       }),
     ).resolves.toBe('/api/wallets/me');
 
     await expect(
       financeProxyOptions.proxyReqPathResolver({
-        originalUrl: '/api/finance/payments',
+        method: 'GET',
+        originalUrl: '/api/finance/deposits/admin/packages?all=true',
       }),
-    ).resolves.toBe('/api/payments');
+    ).resolves.toBe('/api/deposits/admin/packages?all=true');
   });
 
-  it('forwards direct finance resource routes to finance-service without rewriting', async () => {
+  it('forwards legacy finance resource routes without rewriting', async () => {
     new ProxyMiddleware(serviceConfig as never);
 
-    const depositsProxyOptions = (proxy as jest.Mock).mock.calls[4][1];
-    const walletsProxyOptions = (proxy as jest.Mock).mock.calls[5][1];
+    const financeProxyOptions = getProxyOptions('http://finance-service');
 
     await expect(
-      depositsProxyOptions.proxyReqPathResolver({
+      financeProxyOptions.proxyReqPathResolver({
+        method: 'GET',
         originalUrl: '/api/deposits/packages',
       }),
     ).resolves.toBe('/api/deposits/packages');
 
     await expect(
-      walletsProxyOptions.proxyReqPathResolver({
+      financeProxyOptions.proxyReqPathResolver({
+        method: 'GET',
         originalUrl: '/api/wallets/me',
       }),
     ).resolves.toBe('/api/wallets/me');
+  });
+
+  it('strips spoofable headers case-insensitively and sets gateway headers', () => {
+    new ProxyMiddleware(serviceConfig as never);
+
+    const mediaProxyOptions = getProxyOptions('http://media-service');
+    const result = mediaProxyOptions.proxyReqOptDecorator(
+      {
+        headers: {
+          'X-User-Id': 'spoofed-user',
+          'x-USER-email': 'spoofed-email',
+          'X-User-Role': 'spoofed-role',
+          'X-Internal-Secret': 'spoofed-secret',
+          'X-Request-Id': 'spoofed-request',
+        },
+      },
+      {
+        method: 'GET',
+        originalUrl: '/api/media/videos/me',
+        id: 'request-1',
+        user: {
+          sub: 'user-1',
+          email: 'user@example.com',
+          role: 'admin',
+        },
+      },
+    );
+
+    expect(result.headers).toEqual({
+      'x-request-id': 'request-1',
+      'x-internal-secret': 'media-secret',
+      'x-user-id': 'user-1',
+      'x-user-email': 'user@example.com',
+      'x-user-role': 'admin',
+    });
+  });
+
+  it('sets service-specific internal secret for public routes that require downstream guard', () => {
+    new ProxyMiddleware(serviceConfig as never);
+
+    const mediaProxyOptions = getProxyOptions('http://media-service');
+    const result = mediaProxyOptions.proxyReqOptDecorator(
+      { headers: {} },
+      {
+        method: 'GET',
+        originalUrl: '/api/media/channels/channel-1/membership-tiers',
+        id: 'request-1',
+      },
+    );
+
+    expect(result.headers['x-internal-secret']).toBe('media-secret');
+    expect(result.headers['x-user-id']).toBeUndefined();
+  });
+
+  it('preserves raw body for webhook routes', () => {
+    new ProxyMiddleware(serviceConfig as never);
+
+    const webhookProxyOptions = getProxyOptions('http://finance-service', 1);
+    const rawBody = Buffer.from('{"signature":"abc","data":{"id":1}}');
+
+    const result = webhookProxyOptions.proxyReqBodyDecorator(
+      { parsed: true },
+      {
+        method: 'POST',
+        originalUrl: '/api/finance/deposits/webhooks/payos',
+        rawBody,
+      },
+    );
+
+    expect(result).toBe(rawBody);
   });
 
   it('creates a dedicated SSE proxy for media progress streams', () => {

@@ -6,7 +6,7 @@ import { Logger } from '@nestjs/common';
 import helmet from 'helmet';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   // Apply Global Exception Filter
   app.useGlobalFilters(new GlobalExceptionFilter());
