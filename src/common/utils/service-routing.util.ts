@@ -123,6 +123,12 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   mediaRoute('GET', /^\/api\/media\/categories\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
+  mediaRoute('GET', /^\/api\/media\/categories\/[^/]+\/videos\/?$/, 'public', {
+    requiresInternalSecret: false,
+  }),
+  mediaRoute('GET', /^\/api\/media\/tags\/?$/, 'public', {
+    requiresInternalSecret: false,
+  }),
   mediaRoute('GET', /^\/api\/media\/search\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
@@ -169,10 +175,23 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/videos\/me\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/videos\/?$/, 'public', {
+    requiresInternalSecret: false,
+  }),
   mediaRoute('POST', /^\/api\/media\/videos\/init-upload\/?$/, 'protected'),
   mediaRoute(
     'POST',
     /^\/api\/media\/videos\/[^/]+\/confirm-upload\/?$/,
+    'protected',
+  ),
+  mediaRoute(
+    'POST',
+    /^\/api\/media\/videos\/[^/]+\/replace-upload\/?$/,
+    'protected',
+  ),
+  mediaRoute(
+    'DELETE',
+    /^\/api\/media\/videos\/[^/]+\/upload\/?$/,
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/play\/?$/, 'protected'),
@@ -235,9 +254,22 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'public',
     { requiresInternalSecret: false },
   ),
-  mediaRoute('GET', /^\/api\/media\/categories\/admin\/all\/?$/, 'protected'),
-  mediaRoute('POST', /^\/api\/media\/categories\/?$/, 'protected'),
-  mediaRoute('PATCH', /^\/api\/media\/categories\/[^/]+\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/admin\/categories\/?$/, 'protected'),
+  mediaRoute('POST', /^\/api\/media\/admin\/categories\/?$/, 'protected'),
+  mediaRoute(
+    'PATCH',
+    /^\/api\/media\/admin\/categories\/[^/]+\/?$/,
+    'protected',
+  ),
+  mediaRoute(
+    'DELETE',
+    /^\/api\/media\/admin\/categories\/[^/]+\/?$/,
+    'protected',
+  ),
+  mediaRoute('GET', /^\/api\/media\/admin\/tags\/?$/, 'protected'),
+  mediaRoute('POST', /^\/api\/media\/admin\/tags\/?$/, 'protected'),
+  mediaRoute('PATCH', /^\/api\/media\/admin\/tags\/[^/]+\/?$/, 'protected'),
+  mediaRoute('DELETE', /^\/api\/media\/admin\/tags\/[^/]+\/?$/, 'protected'),
 
   financeRoute('GET', /^\/api\/finance\/deposits\/packages\/?$/, 'public'),
   financeRoute(

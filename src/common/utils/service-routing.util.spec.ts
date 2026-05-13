@@ -10,7 +10,16 @@ describe('service routing manifest', () => {
     ).toBe('public');
 
     expect(
-      resolveRouteManifestEntry('POST', '/api/media/categories')?.authPolicy,
+      resolveRouteManifestEntry('GET', '/api/media/tags')?.authPolicy,
+    ).toBe('public');
+
+    expect(
+      resolveRouteManifestEntry('POST', '/api/media/admin/categories')
+        ?.authPolicy,
+    ).toBe('protected');
+
+    expect(
+      resolveRouteManifestEntry('POST', '/api/media/admin/tags')?.authPolicy,
     ).toBe('protected');
   });
 
@@ -38,6 +47,24 @@ describe('service routing manifest', () => {
     expect(resolveProxyPath('GET', '/api/media/videos/library/purchased')).toBe(
       '/api/media/videos/library/purchased',
     );
+  });
+
+  it('routes draft upload replacement and cancellation as protected media requests', () => {
+    const replaceEntry = resolveRouteManifestEntry(
+      'POST',
+      '/api/media/videos/video-1/replace-upload',
+    );
+    const cancelEntry = resolveRouteManifestEntry(
+      'DELETE',
+      '/api/media/videos/video-1/upload',
+    );
+
+    expect(replaceEntry?.serviceKey).toBe('mediaService');
+    expect(replaceEntry?.authPolicy).toBe('protected');
+    expect(replaceEntry?.requiresInternalSecret).toBe(true);
+    expect(cancelEntry?.serviceKey).toBe('mediaService');
+    expect(cancelEntry?.authPolicy).toBe('protected');
+    expect(cancelEntry?.requiresInternalSecret).toBe(true);
   });
 
   it('rewrites namespaced finance routes to the finance service api prefix', () => {
