@@ -204,13 +204,6 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/metadata\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
-  mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/progress\/?$/, 'protected'),
-  mediaRoute(
-    'GET',
-    /^\/api\/media\/videos\/[^/]+\/progress\/stream\/?$/,
-    'protected',
-    { streamMode: 'sse' },
-  ),
   mediaRoute(
     'PATCH',
     /^\/api\/media\/videos\/[^/]+\/metadata\/?$/,
