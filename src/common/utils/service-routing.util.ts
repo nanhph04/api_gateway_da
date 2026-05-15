@@ -194,6 +194,11 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     /^\/api\/media\/videos\/[^/]+\/upload\/?$/,
     'protected',
   ),
+  mediaRoute(
+    'DELETE',
+    /^\/api\/media\/videos\/[^/]+\/failed-upload\/?$/,
+    'protected',
+  ),
   mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/play\/?$/, 'protected'),
   mediaRoute('POST', /^\/api\/media\/videos\/[^/]+\/progress\/?$/, 'protected'),
   mediaRoute(
@@ -276,6 +281,7 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'webhook',
   ),
   financeRoute('ALL', /^\/api\/finance(?:\/.*)?\/?$/, 'protected'),
+  financeRoute('ALL', /^\/api\/studio(?:\/.*)?\/?$/, 'protected'),
 
   financeRoute('GET', /^\/api\/deposits\/packages\/?$/, 'public', {
     deprecated: true,
