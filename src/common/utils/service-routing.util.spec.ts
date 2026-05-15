@@ -21,6 +21,41 @@ describe('service routing manifest', () => {
     expect(
       resolveRouteManifestEntry('POST', '/api/media/admin/tags')?.authPolicy,
     ).toBe('protected');
+
+    expect(
+      resolveRouteManifestEntry(
+        'GET',
+        '/api/identity/user/admin/users/summary',
+      )?.serviceKey,
+    ).toBe('identityService');
+
+    expect(
+      resolveRouteManifestEntry(
+        'GET',
+        '/api/media/admin/channels/summary',
+      )?.serviceKey,
+    ).toBe('mediaService');
+
+    expect(
+      resolveRouteManifestEntry(
+        'GET',
+        '/api/media/admin/reports/summary',
+      )?.serviceKey,
+    ).toBe('mediaService');
+
+    expect(
+      resolveRouteManifestEntry(
+        'GET',
+        '/api/media/admin/reports?status=pending&page=1&limit=5',
+      )?.serviceKey,
+    ).toBe('mediaService');
+
+    expect(
+      resolveRouteManifestEntry(
+        'GET',
+        '/api/media/admin/videos?page=1&limit=20',
+      )?.serviceKey,
+    ).toBe('mediaService');
   });
 
   it('does not make write methods public for public GET resources', () => {
@@ -94,6 +129,15 @@ describe('service routing manifest', () => {
     expect(resolveProxyPath('POST', '/api/deposits/webhooks/payos')).toBe(
       '/api/deposits/webhooks/payos',
     );
+  });
+
+  it('rewrites identity admin user aliases to the identity service prefix', () => {
+    expect(resolveProxyPath('GET', '/api/user/admin/users/summary')).toBe(
+      '/api/identity/user/admin/users/summary',
+    );
+    expect(
+      resolveProxyPath('GET', '/api/identity/user/admin/users/summary'),
+    ).toBe('/api/identity/user/admin/users/summary');
   });
 
   it('routes studio finance aliases to finance service unchanged', () => {

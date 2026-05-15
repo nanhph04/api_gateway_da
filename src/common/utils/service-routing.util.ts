@@ -116,6 +116,12 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   identityRoute('PATCH', /^\/api\/user\/users\/profile\/?$/, 'protected'),
+  identityRoute(
+    'GET',
+    /^\/api\/identity\/user\/admin\/users\/summary\/?$/,
+    'protected',
+  ),
+  identityRoute('GET', /^\/api\/user\/admin\/users\/summary\/?$/, 'protected'),
 
   mediaRoute('GET', /^\/api\/media\/?$/, 'public', {
     requiresInternalSecret: false,
@@ -268,6 +274,10 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   mediaRoute('POST', /^\/api\/media\/admin\/tags\/?$/, 'protected'),
   mediaRoute('PATCH', /^\/api\/media\/admin\/tags\/[^/]+\/?$/, 'protected'),
   mediaRoute('DELETE', /^\/api\/media\/admin\/tags\/[^/]+\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/admin\/channels\/summary\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/admin\/videos\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/admin\/reports\/summary\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/admin\/reports\/?$/, 'protected'),
 
   financeRoute('GET', /^\/api\/finance\/deposits\/packages\/?$/, 'public'),
   financeRoute(
