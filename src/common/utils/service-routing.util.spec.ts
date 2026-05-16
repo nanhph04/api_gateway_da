@@ -150,6 +150,18 @@ describe('service routing manifest', () => {
       '/api/identity/user/admin/users/summary',
     );
     expect(
+      resolveProxyPath(
+        'GET',
+        '/api/user/admin/users?page=1&limit=20&status=suspended',
+      ),
+    ).toBe('/api/identity/user/admin/users?page=1&limit=20&status=suspended');
+    expect(resolveProxyPath('GET', '/api/user/admin/users/user-1')).toBe(
+      '/api/identity/user/admin/users/user-1',
+    );
+    expect(
+      resolveProxyPath('PATCH', '/api/user/admin/users/user-1/status'),
+    ).toBe('/api/identity/user/admin/users/user-1/status');
+    expect(
       resolveProxyPath('GET', '/api/identity/user/admin/users/summary'),
     ).toBe('/api/identity/user/admin/users/summary');
   });

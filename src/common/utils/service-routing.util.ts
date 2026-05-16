@@ -122,6 +122,13 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   identityRoute('GET', /^\/api\/user\/admin\/users\/summary\/?$/, 'protected'),
+  identityRoute('GET', /^\/api\/user\/admin\/users\/?$/, 'protected'),
+  identityRoute('GET', /^\/api\/user\/admin\/users\/[^/]+\/?$/, 'protected'),
+  identityRoute(
+    'PATCH',
+    /^\/api\/user\/admin\/users\/[^/]+\/status\/?$/,
+    'protected',
+  ),
 
   mediaRoute('GET', /^\/api\/media\/?$/, 'public', {
     requiresInternalSecret: false,
