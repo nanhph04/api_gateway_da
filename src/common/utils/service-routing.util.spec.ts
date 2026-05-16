@@ -39,6 +39,20 @@ describe('service routing manifest', () => {
     expect(
       resolveRouteManifestEntry(
         'GET',
+        '/api/media/admin/channels/membership-reviews?status=pending',
+      )?.serviceKey,
+    ).toBe('mediaService');
+
+    expect(
+      resolveRouteManifestEntry(
+        'PATCH',
+        '/api/media/admin/channels/channel-1/membership-review',
+      )?.serviceKey,
+    ).toBe('mediaService');
+
+    expect(
+      resolveRouteManifestEntry(
+        'GET',
         '/api/media/admin/reports/summary',
       )?.serviceKey,
     ).toBe('mediaService');
