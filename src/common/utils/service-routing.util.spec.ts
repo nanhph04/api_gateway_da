@@ -98,6 +98,23 @@ describe('service routing manifest', () => {
     );
   });
 
+  it('routes membership auto-renew updates to the protected media service', () => {
+    const entry = resolveRouteManifestEntry(
+      'PATCH',
+      '/api/media/memberships/membership-1/auto-renew',
+    );
+
+    expect(entry?.serviceKey).toBe('mediaService');
+    expect(entry?.authPolicy).toBe('protected');
+    expect(entry?.requiresInternalSecret).toBe(true);
+    expect(
+      resolveProxyPath(
+        'PATCH',
+        '/api/media/memberships/membership-1/auto-renew',
+      ),
+    ).toBe('/api/media/memberships/membership-1/auto-renew');
+  });
+
   it('routes draft upload replacement and cancellation as protected media requests', () => {
     const replaceEntry = resolveRouteManifestEntry(
       'POST',

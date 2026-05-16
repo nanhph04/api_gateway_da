@@ -163,6 +163,11 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   ),
   mediaRoute('GET', /^\/api\/media\/memberships\/me\/?$/, 'protected'),
   mediaRoute(
+    'PATCH',
+    /^\/api\/media\/memberships\/[^/]+\/auto-renew\/?$/,
+    'protected',
+  ),
+  mediaRoute(
     'GET',
     /^\/api\/media\/channels\/[^/]+\/membership-tiers\/?$/,
     'public',
