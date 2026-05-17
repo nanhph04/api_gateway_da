@@ -287,6 +287,7 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   mediaRoute('PATCH', /^\/api\/media\/admin\/tags\/[^/]+\/?$/, 'protected'),
   mediaRoute('DELETE', /^\/api\/media\/admin\/tags\/[^/]+\/?$/, 'protected'),
   mediaRoute('GET', /^\/api\/media\/admin\/channels\/summary\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/admin\/channels\/?$/, 'protected'),
   mediaRoute(
     'GET',
     /^\/api\/media\/admin\/channels\/membership-reviews\/?$/,
@@ -295,6 +296,11 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   mediaRoute(
     'PATCH',
     /^\/api\/media\/admin\/channels\/[^/]+\/membership-review\/?$/,
+    'protected',
+  ),
+  mediaRoute(
+    'PATCH',
+    /^\/api\/media\/admin\/channels\/[^/]+\/status\/?$/,
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/admin\/videos\/?$/, 'protected'),
