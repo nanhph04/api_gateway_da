@@ -37,6 +37,7 @@ const identityRoute = (
   method: string,
   publicPathPattern: RegExp,
   authPolicy: AuthPolicy,
+  options: Partial<Pick<RouteManifestEntry, 'streamMode'>> = {},
 ): RouteManifestEntry => ({
   method,
   serviceKey: 'identityService',
@@ -51,6 +52,7 @@ const identityRoute = (
   authPolicy,
   requiresInternalSecret: false,
   rateLimitBucket: 'identityService',
+  streamMode: options.streamMode,
 });
 
 const mediaRoute = (
@@ -102,6 +104,9 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   identityRoute('POST', /^\/api\/auth\/reset-password\/?$/, 'public'),
   identityRoute('POST', /^\/api\/auth\/refresh\/?$/, 'cookieAuth'),
   identityRoute('GET', /^\/api\/auth\/session\/profile\/?$/, 'cookieAuth'),
+  identityRoute('GET', /^\/api\/auth\/session\/events\/?$/, 'protected', {
+    streamMode: 'sse',
+  }),
   identityRoute('POST', /^\/api\/auth\/change-password\/?$/, 'protected'),
   identityRoute('POST', /^\/api\/auth\/logout\/?$/, 'protected'),
   identityRoute('GET', /^\/api\/user\/users\/profile\/?$/, 'protected'),

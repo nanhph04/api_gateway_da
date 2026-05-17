@@ -31,7 +31,7 @@ interface RequestWithGatewayContext extends Request {
 export class ProxyMiddleware implements NestMiddleware {
   private readonly logger = new Logger(ProxyMiddleware.name);
   private readonly proxyMap: Map<string, ReturnType<typeof proxy>> = new Map();
-  private readonly mediaSseProxy?: RequestHandler;
+  private readonly sseProxyMap: Map<ServiceKey, RequestHandler> = new Map();
 
   constructor(private readonly serviceConfigService: ServiceConfigService) {
     const proxiedServiceKeys = new Set<ServiceKey>();
@@ -49,25 +49,11 @@ export class ProxyMiddleware implements NestMiddleware {
       proxiedServiceKeys.add(entry.serviceKey);
     }
 
-    if (
-      proxiedServiceKeys.has('mediaService') &&
-      this.serviceConfigService.mediaServiceUrl
-    ) {
-      this.mediaSseProxy = createProxyMiddleware({
-        target: this.serviceConfigService.mediaServiceUrl,
-        changeOrigin: true,
-        proxyTimeout: 0,
-        timeout: 0,
-        selfHandleResponse: false,
-        on: {
-          proxyReq: (proxyReq, req) => {
-            this.setForwardHeaders(proxyReq, req as RequestWithGatewayContext);
-          },
-          error: (err, req, res) => {
-            this.handleProxyError(err, req as Request, res as Response);
-          },
-        },
-      });
+    for (const serviceKey of proxiedServiceKeys) {
+      const target = this.resolveTargetUrl(serviceKey);
+      if (target) {
+        this.sseProxyMap.set(serviceKey, this.createSseProxy(target));
+      }
     }
   }
 
@@ -78,8 +64,9 @@ export class ProxyMiddleware implements NestMiddleware {
       return;
     }
 
-    if (entry.streamMode === 'sse' && this.mediaSseProxy) {
-      this.mediaSseProxy(req, res, next);
+    const sseProxy = this.sseProxyMap.get(entry.serviceKey);
+    if (entry.streamMode === 'sse' && sseProxy) {
+      sseProxy(req, res, next);
       return;
     }
 
@@ -116,6 +103,29 @@ export class ProxyMiddleware implements NestMiddleware {
         ),
       onError: (err, req, res) => {
         this.handleProxyError(err, req as Request, res);
+      },
+    });
+  }
+
+  private createSseProxy(target: string): RequestHandler {
+    return createProxyMiddleware({
+      target,
+      changeOrigin: true,
+      proxyTimeout: 0,
+      timeout: 0,
+      selfHandleResponse: false,
+      pathRewrite: (_path, req) =>
+        resolveProxyPath(
+          req.method || 'GET',
+          (req as Request).originalUrl || req.url || '/',
+        ),
+      on: {
+        proxyReq: (proxyReq, req) => {
+          this.setForwardHeaders(proxyReq, req as RequestWithGatewayContext);
+        },
+        error: (err, req, res) => {
+          this.handleProxyError(err, req as Request, res as Response);
+        },
       },
     });
   }
