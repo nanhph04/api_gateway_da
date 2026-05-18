@@ -4,9 +4,16 @@ API GATEWAY ROUTES
 Media membership routes:
 
 ```text
+POST  /api/media/channels/:channelId/membership-review/request
 GET   /api/media/memberships/me
 PATCH /api/media/memberships/:membershipId/auto-renew
 ```
+
+`POST /api/media/channels/:channelId/membership-review/request` is a protected
+route for creators to request admin approval before opening channel membership.
+It forwards unchanged to media-service and injects authenticated user headers.
+The request has no body. When the channel meets membership eligibility,
+media-service moves `membershipReviewStatus` to `pending`.
 
 `PATCH /api/media/memberships/:membershipId/auto-renew` is a protected route.
 The gateway forwards it unchanged to media-service and injects the internal

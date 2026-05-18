@@ -23,17 +23,13 @@ describe('service routing manifest', () => {
     ).toBe('protected');
 
     expect(
-      resolveRouteManifestEntry(
-        'GET',
-        '/api/identity/user/admin/users/summary',
-      )?.serviceKey,
+      resolveRouteManifestEntry('GET', '/api/identity/user/admin/users/summary')
+        ?.serviceKey,
     ).toBe('identityService');
 
     expect(
-      resolveRouteManifestEntry(
-        'GET',
-        '/api/media/admin/channels/summary',
-      )?.serviceKey,
+      resolveRouteManifestEntry('GET', '/api/media/admin/channels/summary')
+        ?.serviceKey,
     ).toBe('mediaService');
 
     expect(
@@ -65,10 +61,8 @@ describe('service routing manifest', () => {
     ).toBe('mediaService');
 
     expect(
-      resolveRouteManifestEntry(
-        'GET',
-        '/api/media/admin/reports/summary',
-      )?.serviceKey,
+      resolveRouteManifestEntry('GET', '/api/media/admin/reports/summary')
+        ?.serviceKey,
     ).toBe('mediaService');
 
     expect(
@@ -112,6 +106,38 @@ describe('service routing manifest', () => {
     );
   });
 
+  it('routes studio video detail requests to the protected media service', () => {
+    const entry = resolveRouteManifestEntry(
+      'GET',
+      '/api/media/videos/me/video-1/detail',
+    );
+
+    expect(entry?.serviceKey).toBe('mediaService');
+    expect(entry?.authPolicy).toBe('protected');
+    expect(entry?.requiresInternalSecret).toBe(true);
+    expect(resolveProxyPath('GET', '/api/media/videos/me/video-1/detail')).toBe(
+      '/api/media/videos/me/video-1/detail',
+    );
+  });
+
+  it('routes video thumbnail streaming with public and owner access policies', () => {
+    const publicEntry = resolveRouteManifestEntry(
+      'GET',
+      '/api/media/videos/video-1/thumbnail',
+    );
+    const ownerEntry = resolveRouteManifestEntry(
+      'GET',
+      '/api/media/videos/me/video-1/thumbnail',
+    );
+
+    expect(publicEntry?.serviceKey).toBe('mediaService');
+    expect(publicEntry?.authPolicy).toBe('public');
+    expect(publicEntry?.requiresInternalSecret).toBe(false);
+    expect(ownerEntry?.serviceKey).toBe('mediaService');
+    expect(ownerEntry?.authPolicy).toBe('protected');
+    expect(ownerEntry?.requiresInternalSecret).toBe(true);
+  });
+
   it('routes membership auto-renew updates to the protected media service', () => {
     const entry = resolveRouteManifestEntry(
       'PATCH',
@@ -127,6 +153,23 @@ describe('service routing manifest', () => {
         '/api/media/memberships/membership-1/auto-renew',
       ),
     ).toBe('/api/media/memberships/membership-1/auto-renew');
+  });
+
+  it('routes channel membership review requests to the protected media service', () => {
+    const entry = resolveRouteManifestEntry(
+      'POST',
+      '/api/media/channels/channel-1/membership-review/request',
+    );
+
+    expect(entry?.serviceKey).toBe('mediaService');
+    expect(entry?.authPolicy).toBe('protected');
+    expect(entry?.requiresInternalSecret).toBe(true);
+    expect(
+      resolveProxyPath(
+        'POST',
+        '/api/media/channels/channel-1/membership-review/request',
+      ),
+    ).toBe('/api/media/channels/channel-1/membership-review/request');
   });
 
   it('routes draft upload replacement and cancellation as protected media requests', () => {
@@ -198,10 +241,7 @@ describe('service routing manifest', () => {
   });
 
   it('routes studio finance aliases to finance service unchanged', () => {
-    const entry = resolveRouteManifestEntry(
-      'GET',
-      '/api/studio/wallet/stats',
-    );
+    const entry = resolveRouteManifestEntry('GET', '/api/studio/wallet/stats');
 
     expect(entry?.serviceKey).toBe('financeService');
     expect(entry?.authPolicy).toBe('protected');

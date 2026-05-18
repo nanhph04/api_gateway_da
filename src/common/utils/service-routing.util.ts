@@ -162,6 +162,11 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   mediaRoute(
+    'POST',
+    /^\/api\/media\/channels\/[^/]+\/membership-review\/request\/?$/,
+    'protected',
+  ),
+  mediaRoute(
     'PATCH',
     /^\/api\/media\/channels\/[^/]+\/admin\/membership\/?$/,
     'protected',
@@ -198,6 +203,16 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/videos\/me\/?$/, 'protected'),
+  mediaRoute(
+    'GET',
+    /^\/api\/media\/videos\/me\/[^/]+\/detail\/?$/,
+    'protected',
+  ),
+  mediaRoute(
+    'GET',
+    /^\/api\/media\/videos\/me\/[^/]+\/thumbnail\/?$/,
+    'protected',
+  ),
   mediaRoute('GET', /^\/api\/media\/videos\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
@@ -212,11 +227,7 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     /^\/api\/media\/videos\/[^/]+\/replace-upload\/?$/,
     'protected',
   ),
-  mediaRoute(
-    'DELETE',
-    /^\/api\/media\/videos\/[^/]+\/upload\/?$/,
-    'protected',
-  ),
+  mediaRoute('DELETE', /^\/api\/media\/videos\/[^/]+\/upload\/?$/, 'protected'),
   mediaRoute(
     'DELETE',
     /^\/api\/media\/videos\/[^/]+\/failed-upload\/?$/,
@@ -230,6 +241,9 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/metadata\/?$/, 'public', {
+    requiresInternalSecret: false,
+  }),
+  mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/thumbnail\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
   mediaRoute(
