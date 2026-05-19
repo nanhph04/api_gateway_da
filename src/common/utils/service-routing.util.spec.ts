@@ -80,6 +80,21 @@ describe('service routing manifest', () => {
     ).toBe('mediaService');
   });
 
+  it('routes public category video lists and does not route removed category discovery alias', () => {
+    const categoryEntry = resolveRouteManifestEntry(
+      'GET',
+      '/api/media/categories/music/videos?page=1&limit=20',
+    );
+    const removedEntry = resolveRouteManifestEntry(
+      'GET',
+      '/api/media/videos/discovery/by-category?category=music&page=1&limit=20',
+    );
+
+    expect(categoryEntry?.serviceKey).toBe('mediaService');
+    expect(categoryEntry?.authPolicy).toBe('public');
+    expect(categoryEntry?.requiresInternalSecret).toBe(false);
+    expect(removedEntry).toBeUndefined();
+  });
   it('does not make write methods public for public GET resources', () => {
     expect(
       resolveRouteManifestEntry('GET', '/api/media/channels/channel-1')
