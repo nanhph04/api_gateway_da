@@ -203,6 +203,9 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/videos\/me\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/videos\/events\/stream\/?$/, 'protected', {
+    streamMode: 'sse',
+  }),
   mediaRoute(
     'GET',
     /^\/api\/media\/videos\/me\/[^/]+\/detail\/?$/,

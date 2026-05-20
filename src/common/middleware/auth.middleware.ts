@@ -36,8 +36,8 @@ export class AuthMiddleware implements NestMiddleware {
       return;
     }
 
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
+    const token = this.getBearerToken(req, authPolicy);
+    if (!token) {
       if (authPolicy === 'optional') {
         next();
         return;
@@ -55,33 +55,6 @@ export class AuthMiddleware implements NestMiddleware {
       );
     }
 
-    if (!authHeader.startsWith('Bearer ')) {
-      this.logRejectedRequest(
-        requestId,
-        service,
-        req.method,
-        path,
-        'invalid Authorization header',
-      );
-      throw new UnauthorizedException(
-        'Missing or invalid Authorization header',
-      );
-    }
-
-    const token = authHeader.split(' ')[1];
-    if (!token) {
-      this.logRejectedRequest(
-        requestId,
-        service,
-        req.method,
-        path,
-        'empty bearer token',
-      );
-      throw new UnauthorizedException(
-        'Missing or invalid Authorization header',
-      );
-    }
-
     try {
       req.user = this.verifyAccessToken(token);
       next();
@@ -91,6 +64,42 @@ export class AuthMiddleware implements NestMiddleware {
       );
       throw new UnauthorizedException('Invalid or expired token');
     }
+  }
+
+  private getBearerToken(
+    req: AuthenticatedRequest,
+    authPolicy: string,
+  ): string | undefined {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      if (!authHeader.startsWith('Bearer ')) {
+        return undefined;
+      }
+
+      const token = authHeader.split(' ')[1];
+      return token || undefined;
+    }
+
+    if (!this.canUseQueryAccessToken(req, authPolicy)) {
+      return undefined;
+    }
+
+    const accessToken = req.query?.access_token;
+    return typeof accessToken === 'string' && accessToken
+      ? accessToken
+      : undefined;
+  }
+
+  private canUseQueryAccessToken(
+    req: AuthenticatedRequest,
+    authPolicy: string,
+  ): boolean {
+    if (authPolicy !== 'protected' || req.method.toUpperCase() !== 'GET') {
+      return false;
+    }
+
+    const entry = getRequestRouteManifestEntry(req);
+    return entry?.streamMode === 'sse' || /\/thumbnail\/?$/.test(req.path);
   }
 
   private verifyAccessToken(token: string): jwt.JwtPayload {

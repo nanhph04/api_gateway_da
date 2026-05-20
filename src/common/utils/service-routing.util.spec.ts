@@ -135,6 +135,21 @@ describe('service routing manifest', () => {
     );
   });
 
+  it('routes media video event streams through the SSE proxy', () => {
+    const entry = resolveRouteManifestEntry(
+      'GET',
+      '/api/media/videos/events/stream',
+    );
+
+    expect(entry?.serviceKey).toBe('mediaService');
+    expect(entry?.authPolicy).toBe('protected');
+    expect(entry?.requiresInternalSecret).toBe(true);
+    expect(entry?.streamMode).toBe('sse');
+    expect(resolveProxyPath('GET', '/api/media/videos/events/stream')).toBe(
+      '/api/media/videos/events/stream',
+    );
+  });
+
   it('routes video thumbnail streaming with public and owner access policies', () => {
     const publicEntry = resolveRouteManifestEntry(
       'GET',

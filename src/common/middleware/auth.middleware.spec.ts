@@ -16,10 +16,15 @@ describe('AuthMiddleware', () => {
     method: string,
     path: string,
     authorization?: string,
+    query: Record<string, string> = {},
   ): any => ({
     method,
     path,
-    originalUrl: path,
+    originalUrl:
+      Object.keys(query).length > 0
+        ? `${path}?${new URLSearchParams(query).toString()}`
+        : path,
+    query,
     headers: authorization ? { authorization } : {},
   });
 
@@ -110,6 +115,56 @@ describe('AuthMiddleware', () => {
     expect(() =>
       middleware.use(
         buildRequest('GET', '/api/media/videos/me'),
+        {} as any,
+        next,
+      ),
+    ).toThrow(UnauthorizedException);
+
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('allows protected browser media streams with access_token query auth', () => {
+    const req = buildRequest(
+      'GET',
+      '/api/media/videos/events/stream',
+      undefined,
+      { access_token: signToken() },
+    );
+
+    middleware.use(req, {} as any, next);
+
+    expect(req.user).toEqual(
+      expect.objectContaining({
+        sub: 'user-1',
+      }),
+    );
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows protected owner thumbnails with access_token query auth', () => {
+    const req = buildRequest(
+      'GET',
+      '/api/media/videos/me/video-1/thumbnail',
+      undefined,
+      { access_token: signToken() },
+    );
+
+    middleware.use(req, {} as any, next);
+
+    expect(req.user).toEqual(
+      expect.objectContaining({
+        sub: 'user-1',
+      }),
+    );
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not allow query token auth for ordinary protected APIs', () => {
+    expect(() =>
+      middleware.use(
+        buildRequest('GET', '/api/media/videos/me', undefined, {
+          access_token: signToken(),
+        }),
         {} as any,
         next,
       ),
