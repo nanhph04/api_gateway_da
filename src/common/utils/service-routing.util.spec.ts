@@ -202,29 +202,39 @@ describe('service routing manifest', () => {
     ).toBe('/api/media/channels/channel-1/membership-review/request');
   });
 
-  it('routes draft upload replacement and cancellation as protected media requests', () => {
-    const replaceEntry = resolveRouteManifestEntry(
-      'POST',
-      '/api/media/videos/video-1/replace-upload',
-    );
-    const cancelEntry = resolveRouteManifestEntry(
-      'DELETE',
-      '/api/media/videos/video-1/upload',
-    );
+  it('routes failed upload deletion as a protected media request', () => {
     const deleteFailedEntry = resolveRouteManifestEntry(
       'DELETE',
       '/api/media/videos/video-1/failed-upload',
     );
 
-    expect(replaceEntry?.serviceKey).toBe('mediaService');
-    expect(replaceEntry?.authPolicy).toBe('protected');
-    expect(replaceEntry?.requiresInternalSecret).toBe(true);
-    expect(cancelEntry?.serviceKey).toBe('mediaService');
-    expect(cancelEntry?.authPolicy).toBe('protected');
-    expect(cancelEntry?.requiresInternalSecret).toBe(true);
     expect(deleteFailedEntry?.serviceKey).toBe('mediaService');
     expect(deleteFailedEntry?.authPolicy).toBe('protected');
     expect(deleteFailedEntry?.requiresInternalSecret).toBe(true);
+  });
+
+  it('routes resumable video upload lifecycle requests as protected media requests', () => {
+    const paths: Array<[string, string]> = [
+      ['POST', '/api/media/videos/uploads'],
+      ['POST', '/api/media/videos/video-1/uploads/upload-1/part-urls'],
+      [
+        'POST',
+        '/api/media/videos/video-1/uploads/upload-1/parts/3/completed',
+      ],
+      ['GET', '/api/media/videos/video-1/uploads/upload-1/status'],
+      ['POST', '/api/media/videos/video-1/uploads/upload-1/complete'],
+      ['POST', '/api/media/videos/video-1/uploads/upload-1/submit'],
+      ['DELETE', '/api/media/videos/video-1/uploads/upload-1'],
+    ];
+
+    for (const [method, path] of paths) {
+      const entry = resolveRouteManifestEntry(method, path);
+
+      expect(entry?.serviceKey).toBe('mediaService');
+      expect(entry?.authPolicy).toBe('protected');
+      expect(entry?.requiresInternalSecret).toBe(true);
+      expect(resolveProxyPath(method, path)).toBe(path);
+    }
   });
 
   it('rewrites namespaced finance routes to the finance service api prefix', () => {

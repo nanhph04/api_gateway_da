@@ -219,18 +219,37 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   mediaRoute('GET', /^\/api\/media\/videos\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
-  mediaRoute('POST', /^\/api\/media\/videos\/init-upload\/?$/, 'protected'),
+  mediaRoute('POST', /^\/api\/media\/videos\/uploads\/?$/, 'protected'),
   mediaRoute(
     'POST',
-    /^\/api\/media\/videos\/[^/]+\/confirm-upload\/?$/,
+    /^\/api\/media\/videos\/[^/]+\/uploads\/[^/]+\/part-urls\/?$/,
     'protected',
   ),
   mediaRoute(
     'POST',
-    /^\/api\/media\/videos\/[^/]+\/replace-upload\/?$/,
+    /^\/api\/media\/videos\/[^/]+\/uploads\/[^/]+\/parts\/[^/]+\/completed\/?$/,
     'protected',
   ),
-  mediaRoute('DELETE', /^\/api\/media\/videos\/[^/]+\/upload\/?$/, 'protected'),
+  mediaRoute(
+    'GET',
+    /^\/api\/media\/videos\/[^/]+\/uploads\/[^/]+\/status\/?$/,
+    'protected',
+  ),
+  mediaRoute(
+    'POST',
+    /^\/api\/media\/videos\/[^/]+\/uploads\/[^/]+\/complete\/?$/,
+    'protected',
+  ),
+  mediaRoute(
+    'POST',
+    /^\/api\/media\/videos\/[^/]+\/uploads\/[^/]+\/submit\/?$/,
+    'protected',
+  ),
+  mediaRoute(
+    'DELETE',
+    /^\/api\/media\/videos\/[^/]+\/uploads\/[^/]+\/?$/,
+    'protected',
+  ),
   mediaRoute(
     'DELETE',
     /^\/api\/media\/videos\/[^/]+\/failed-upload\/?$/,
