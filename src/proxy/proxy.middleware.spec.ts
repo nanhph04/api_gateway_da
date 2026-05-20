@@ -127,9 +127,9 @@ describe('ProxyMiddleware', () => {
     await expect(
       mediaProxyOptions.proxyReqPathResolver({
         method: 'GET',
-        originalUrl: '/api/media/videos/discovery/latest?limit=10',
+        originalUrl: '/api/media/videos/latest?limit=10',
       }),
-    ).resolves.toBe('/api/media/videos/discovery/latest?limit=10');
+    ).resolves.toBe('/api/media/videos/latest?limit=10');
   });
 
   it('rewrites namespaced finance routes to the finance-service api prefix', async () => {
@@ -188,7 +188,7 @@ describe('ProxyMiddleware', () => {
       },
       {
         method: 'GET',
-        originalUrl: '/api/media/videos/me',
+        originalUrl: '/api/media/studio/videos',
         id: 'request-1',
         user: {
           sub: 'user-1',

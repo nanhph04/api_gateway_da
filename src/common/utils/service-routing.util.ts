@@ -150,9 +150,9 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   mediaRoute('GET', /^\/api\/media\/search\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
-  mediaRoute('GET', /^\/api\/media\/channels\/me\/?$/, 'protected'),
-  mediaRoute('POST', /^\/api\/media\/channels\/?$/, 'protected'),
-  mediaRoute('PATCH', /^\/api\/media\/channels\/[^/]+\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/me\/channel\/?$/, 'protected'),
+  mediaRoute('POST', /^\/api\/media\/me\/channel\/?$/, 'protected'),
+  mediaRoute('PATCH', /^\/api\/media\/me\/channel\/?$/, 'protected'),
   mediaRoute('GET', /^\/api\/media\/channels\/[^/]+\/?$/, 'optional', {
     requiresInternalSecret: false,
   }),
@@ -163,12 +163,12 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   ),
   mediaRoute(
     'POST',
-    /^\/api\/media\/channels\/[^/]+\/membership-review\/request\/?$/,
+    /^\/api\/media\/channels\/[^/]+\/membership-review-requests\/?$/,
     'protected',
   ),
   mediaRoute(
     'PATCH',
-    /^\/api\/media\/channels\/[^/]+\/admin\/membership\/?$/,
+    /^\/api\/media\/admin\/channels\/[^/]+\/membership\/?$/,
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/memberships\/me\/?$/, 'protected'),
@@ -202,64 +202,69 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     /^\/api\/media\/channels\/[^/]+\/membership-tiers\/[^/]+\/?$/,
     'protected',
   ),
-  mediaRoute('GET', /^\/api\/media\/videos\/me\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/studio\/videos\/?$/, 'protected'),
   mediaRoute('GET', /^\/api\/media\/videos\/events\/stream\/?$/, 'protected', {
     streamMode: 'sse',
   }),
   mediaRoute(
     'GET',
-    /^\/api\/media\/videos\/me\/[^/]+\/detail\/?$/,
+    /^\/api\/media\/studio\/videos\/[^/]+\/?$/,
     'protected',
   ),
   mediaRoute(
     'GET',
-    /^\/api\/media\/videos\/me\/[^/]+\/thumbnail\/?$/,
+    /^\/api\/media\/studio\/videos\/[^/]+\/thumbnail\/?$/,
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/videos\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
-  mediaRoute('POST', /^\/api\/media\/videos\/uploads\/?$/, 'protected'),
+  mediaRoute('POST', /^\/api\/media\/studio\/videos\/uploads\/?$/, 'protected'),
   mediaRoute(
     'POST',
-    /^\/api\/media\/videos\/[^/]+\/uploads\/[^/]+\/part-urls\/?$/,
+    /^\/api\/media\/studio\/videos\/[^/]+\/uploads\/[^/]+\/part-urls\/?$/,
     'protected',
   ),
   mediaRoute(
     'POST',
-    /^\/api\/media\/videos\/[^/]+\/uploads\/[^/]+\/parts\/[^/]+\/completed\/?$/,
+    /^\/api\/media\/studio\/videos\/[^/]+\/uploads\/[^/]+\/parts\/[^/]+\/completed\/?$/,
     'protected',
   ),
   mediaRoute(
     'GET',
-    /^\/api\/media\/videos\/[^/]+\/uploads\/[^/]+\/status\/?$/,
+    /^\/api\/media\/studio\/videos\/[^/]+\/uploads\/[^/]+\/status\/?$/,
     'protected',
   ),
   mediaRoute(
     'POST',
-    /^\/api\/media\/videos\/[^/]+\/uploads\/[^/]+\/complete\/?$/,
+    /^\/api\/media\/studio\/videos\/[^/]+\/uploads\/[^/]+\/complete\/?$/,
     'protected',
   ),
   mediaRoute(
     'POST',
-    /^\/api\/media\/videos\/[^/]+\/uploads\/[^/]+\/submit\/?$/,
+    /^\/api\/media\/studio\/videos\/[^/]+\/uploads\/[^/]+\/submit\/?$/,
     'protected',
   ),
   mediaRoute(
     'DELETE',
-    /^\/api\/media\/videos\/[^/]+\/uploads\/[^/]+\/?$/,
+    /^\/api\/media\/studio\/videos\/[^/]+\/uploads\/[^/]+\/?$/,
     'protected',
   ),
   mediaRoute(
     'DELETE',
-    /^\/api\/media\/videos\/[^/]+\/failed-upload\/?$/,
+    /^\/api\/media\/studio\/videos\/[^/]+\/failed-upload\/?$/,
     'protected',
   ),
-  mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/play\/?$/, 'protected'),
-  mediaRoute('POST', /^\/api\/media\/videos\/[^/]+\/progress\/?$/, 'protected'),
+  mediaRoute('DELETE', /^\/api\/media\/studio\/videos\/[^/]+\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/me\/videos\/[^/]+\/play\/?$/, 'protected'),
   mediaRoute(
     'POST',
-    /^\/api\/media\/videos\/[^/]+\/playback-token\/refresh\/?$/,
+    /^\/api\/media\/me\/videos\/[^/]+\/progress\/?$/,
+    'protected',
+  ),
+  mediaRoute(
+    'POST',
+    /^\/api\/media\/me\/videos\/[^/]+\/playback-token\/refresh\/?$/,
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/metadata\/?$/, 'public', {
@@ -270,26 +275,29 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   }),
   mediaRoute(
     'PATCH',
-    /^\/api\/media\/videos\/[^/]+\/metadata\/?$/,
+    /^\/api\/media\/studio\/videos\/[^/]+\/metadata\/?$/,
     'protected',
   ),
-  mediaRoute('GET', /^\/api\/media\/videos\/discovery\/latest\/?$/, 'public', {
+  mediaRoute('GET', /^\/api\/media\/videos\/latest\/?$/, 'public', {
+    requiresInternalSecret: false,
+  }),
+  mediaRoute('GET', /^\/api\/media\/videos\/by-category\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
 
   mediaRoute(
     'GET',
-    /^\/api\/media\/videos\/discovery\/subscribed\/?$/,
+    /^\/api\/media\/me\/videos\/subscribed\/?$/,
     'protected',
   ),
   mediaRoute(
     'GET',
-    /^\/api\/media\/videos\/library\/purchased\/?$/,
+    /^\/api\/media\/me\/videos\/purchased\/?$/,
     'protected',
   ),
   mediaRoute(
     'GET',
-    /^\/api\/media\/videos\/continue-watching\/?$/,
+    /^\/api\/media\/me\/videos\/continue-watching\/?$/,
     'protected',
   ),
   mediaRoute(
@@ -340,6 +348,12 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/admin\/videos\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/admin\/videos\/[^/]+\/?$/, 'protected'),
+  mediaRoute(
+    'PATCH',
+    /^\/api\/media\/admin\/videos\/[^/]+\/moderation\/?$/,
+    'protected',
+  ),
   mediaRoute('GET', /^\/api\/media\/admin\/reports\/summary\/?$/, 'protected'),
   mediaRoute('GET', /^\/api\/media\/admin\/reports\/?$/, 'protected'),
 

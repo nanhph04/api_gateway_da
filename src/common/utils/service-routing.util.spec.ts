@@ -78,22 +78,43 @@ describe('service routing manifest', () => {
         '/api/media/admin/videos?page=1&limit=20',
       )?.serviceKey,
     ).toBe('mediaService');
+
+    expect(
+      resolveRouteManifestEntry('GET', '/api/media/admin/videos/video-1')
+        ?.serviceKey,
+    ).toBe('mediaService');
+
+    expect(
+      resolveRouteManifestEntry(
+        'PATCH',
+        '/api/media/admin/videos/video-1/moderation',
+      )?.serviceKey,
+    ).toBe('mediaService');
   });
 
-  it('routes public category video lists and does not route removed category discovery alias', () => {
+  it('routes public discovery video lists through the current media contract', () => {
     const categoryEntry = resolveRouteManifestEntry(
       'GET',
       '/api/media/categories/music/videos?page=1&limit=20',
     );
-    const removedEntry = resolveRouteManifestEntry(
+    const byCategoryEntry = resolveRouteManifestEntry(
       'GET',
-      '/api/media/videos/discovery/by-category?category=music&page=1&limit=20',
+      '/api/media/videos/by-category?category=music&page=1&limit=20',
+    );
+    const latestEntry = resolveRouteManifestEntry(
+      'GET',
+      '/api/media/videos/latest?limit=20',
     );
 
     expect(categoryEntry?.serviceKey).toBe('mediaService');
     expect(categoryEntry?.authPolicy).toBe('public');
     expect(categoryEntry?.requiresInternalSecret).toBe(false);
-    expect(removedEntry).toBeUndefined();
+    expect(byCategoryEntry?.serviceKey).toBe('mediaService');
+    expect(byCategoryEntry?.authPolicy).toBe('public');
+    expect(byCategoryEntry?.requiresInternalSecret).toBe(false);
+    expect(latestEntry?.serviceKey).toBe('mediaService');
+    expect(latestEntry?.authPolicy).toBe('public');
+    expect(latestEntry?.requiresInternalSecret).toBe(false);
   });
   it('does not make write methods public for public GET resources', () => {
     expect(
@@ -102,36 +123,40 @@ describe('service routing manifest', () => {
     ).toBe('optional');
 
     expect(
+      resolveRouteManifestEntry('PATCH', '/api/media/me/channel')?.authPolicy,
+    ).toBe('protected');
+
+    expect(
       resolveRouteManifestEntry('PATCH', '/api/media/channels/channel-1')
         ?.authPolicy,
-    ).toBe('protected');
+    ).toBeUndefined();
   });
 
-  it('routes purchased video library requests to the protected media service', () => {
+  it('routes purchased video requests to the protected media service', () => {
     const entry = resolveRouteManifestEntry(
       'GET',
-      '/api/media/videos/library/purchased?page=1&limit=20',
+      '/api/media/me/videos/purchased?page=1&limit=20',
     );
 
     expect(entry?.serviceKey).toBe('mediaService');
     expect(entry?.authPolicy).toBe('protected');
     expect(entry?.requiresInternalSecret).toBe(true);
-    expect(resolveProxyPath('GET', '/api/media/videos/library/purchased')).toBe(
-      '/api/media/videos/library/purchased',
+    expect(resolveProxyPath('GET', '/api/media/me/videos/purchased')).toBe(
+      '/api/media/me/videos/purchased',
     );
   });
 
   it('routes studio video detail requests to the protected media service', () => {
     const entry = resolveRouteManifestEntry(
       'GET',
-      '/api/media/videos/me/video-1/detail',
+      '/api/media/studio/videos/video-1',
     );
 
     expect(entry?.serviceKey).toBe('mediaService');
     expect(entry?.authPolicy).toBe('protected');
     expect(entry?.requiresInternalSecret).toBe(true);
-    expect(resolveProxyPath('GET', '/api/media/videos/me/video-1/detail')).toBe(
-      '/api/media/videos/me/video-1/detail',
+    expect(resolveProxyPath('GET', '/api/media/studio/videos/video-1')).toBe(
+      '/api/media/studio/videos/video-1',
     );
   });
 
@@ -157,7 +182,7 @@ describe('service routing manifest', () => {
     );
     const ownerEntry = resolveRouteManifestEntry(
       'GET',
-      '/api/media/videos/me/video-1/thumbnail',
+      '/api/media/studio/videos/video-1/thumbnail',
     );
 
     expect(publicEntry?.serviceKey).toBe('mediaService');
@@ -188,7 +213,7 @@ describe('service routing manifest', () => {
   it('routes channel membership review requests to the protected media service', () => {
     const entry = resolveRouteManifestEntry(
       'POST',
-      '/api/media/channels/channel-1/membership-review/request',
+      '/api/media/channels/channel-1/membership-review-requests',
     );
 
     expect(entry?.serviceKey).toBe('mediaService');
@@ -197,15 +222,15 @@ describe('service routing manifest', () => {
     expect(
       resolveProxyPath(
         'POST',
-        '/api/media/channels/channel-1/membership-review/request',
+        '/api/media/channels/channel-1/membership-review-requests',
       ),
-    ).toBe('/api/media/channels/channel-1/membership-review/request');
+    ).toBe('/api/media/channels/channel-1/membership-review-requests');
   });
 
   it('routes failed upload deletion as a protected media request', () => {
     const deleteFailedEntry = resolveRouteManifestEntry(
       'DELETE',
-      '/api/media/videos/video-1/failed-upload',
+      '/api/media/studio/videos/video-1/failed-upload',
     );
 
     expect(deleteFailedEntry?.serviceKey).toBe('mediaService');
@@ -215,16 +240,16 @@ describe('service routing manifest', () => {
 
   it('routes resumable video upload lifecycle requests as protected media requests', () => {
     const paths: Array<[string, string]> = [
-      ['POST', '/api/media/videos/uploads'],
-      ['POST', '/api/media/videos/video-1/uploads/upload-1/part-urls'],
+      ['POST', '/api/media/studio/videos/uploads'],
+      ['POST', '/api/media/studio/videos/video-1/uploads/upload-1/part-urls'],
       [
         'POST',
-        '/api/media/videos/video-1/uploads/upload-1/parts/3/completed',
+        '/api/media/studio/videos/video-1/uploads/upload-1/parts/3/completed',
       ],
-      ['GET', '/api/media/videos/video-1/uploads/upload-1/status'],
-      ['POST', '/api/media/videos/video-1/uploads/upload-1/complete'],
-      ['POST', '/api/media/videos/video-1/uploads/upload-1/submit'],
-      ['DELETE', '/api/media/videos/video-1/uploads/upload-1'],
+      ['GET', '/api/media/studio/videos/video-1/uploads/upload-1/status'],
+      ['POST', '/api/media/studio/videos/video-1/uploads/upload-1/complete'],
+      ['POST', '/api/media/studio/videos/video-1/uploads/upload-1/submit'],
+      ['DELETE', '/api/media/studio/videos/video-1/uploads/upload-1'],
     ];
 
     for (const [method, path] of paths) {

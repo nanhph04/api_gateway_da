@@ -114,7 +114,7 @@ describe('AuthMiddleware', () => {
   it('rejects protected API routes without authorization', () => {
     expect(() =>
       middleware.use(
-        buildRequest('GET', '/api/media/videos/me'),
+        buildRequest('GET', '/api/media/studio/videos'),
         {} as any,
         next,
       ),
@@ -144,7 +144,7 @@ describe('AuthMiddleware', () => {
   it('allows protected owner thumbnails with access_token query auth', () => {
     const req = buildRequest(
       'GET',
-      '/api/media/videos/me/video-1/thumbnail',
+      '/api/media/studio/videos/video-1/thumbnail',
       undefined,
       { access_token: signToken() },
     );
@@ -162,7 +162,7 @@ describe('AuthMiddleware', () => {
   it('does not allow query token auth for ordinary protected APIs', () => {
     expect(() =>
       middleware.use(
-        buildRequest('GET', '/api/media/videos/me', undefined, {
+        buildRequest('GET', '/api/media/studio/videos', undefined, {
           access_token: signToken(),
         }),
         {} as any,
