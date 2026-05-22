@@ -132,6 +132,45 @@ describe('service routing manifest', () => {
     ).toBeUndefined();
   });
 
+  it('routes identity profile avatar uploads through the current public gateway paths', () => {
+    const uploadUrlEntry = resolveRouteManifestEntry(
+      'POST',
+      '/api/user/users/profile/avatar/upload-url',
+    );
+    const completeEntry = resolveRouteManifestEntry(
+      'POST',
+      '/api/user/users/profile/avatar/complete',
+    );
+
+    expect(uploadUrlEntry?.serviceKey).toBe('identityService');
+    expect(uploadUrlEntry?.authPolicy).toBe('protected');
+    expect(uploadUrlEntry?.requiresInternalSecret).toBe(false);
+    expect(completeEntry?.serviceKey).toBe('identityService');
+    expect(completeEntry?.authPolicy).toBe('protected');
+    expect(completeEntry?.requiresInternalSecret).toBe(false);
+    expect(
+      resolveProxyPath('POST', '/api/user/users/profile/avatar/upload-url'),
+    ).toBe('/api/identity/user/users/profile/avatar/upload-url');
+    expect(
+      resolveProxyPath('POST', '/api/user/users/profile/avatar/complete'),
+    ).toBe('/api/identity/user/users/profile/avatar/complete');
+  });
+
+  it('does not route removed direct profile avatar upload endpoints', () => {
+    expect(
+      resolveRouteManifestEntry('PUT', '/api/user/users/profile/avatar'),
+    ).toBeUndefined();
+    expect(
+      resolveRouteManifestEntry('PATCH', '/api/user/users/profile/avatar'),
+    ).toBeUndefined();
+    expect(resolveProxyPath('PUT', '/api/user/users/profile/avatar')).toBe(
+      '/api/user/users/profile/avatar',
+    );
+    expect(resolveProxyPath('PATCH', '/api/user/users/profile/avatar')).toBe(
+      '/api/user/users/profile/avatar',
+    );
+  });
+
   it('routes channel image uploads to the protected media service', () => {
     const avatarEntry = resolveRouteManifestEntry(
       'POST',

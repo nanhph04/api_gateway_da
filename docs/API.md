@@ -14,6 +14,29 @@ authenticated user headers. Media-service uploads the object to
 `MINIO_PUBLIC_BUCKET` and returns permanent public `avatarUrl`/`bannerUrl`
 values; FE renders those URLs directly.
 
+Identity profile avatar uploads:
+
+```text
+POST  /api/user/users/profile/avatar/upload-url
+POST  /api/user/users/profile/avatar/complete
+```
+
+Both routes are protected identity-service routes exposed through `/api/user/*`.
+The gateway rewrites them to `/api/identity/user/*`, validates the bearer token,
+and injects authenticated user headers.
+
+FE flow:
+
+1. Call `upload-url` to receive `uploadUrl`, `objectKey`, `publicUrl`, and
+   upload headers.
+2. Upload the image directly to `uploadUrl` with HTTP `PUT`.
+3. Call `complete` with `objectKey`.
+4. Render `avatarUrl` from the complete/profile/session response directly.
+
+`avatarUrl` is a permanent public MinIO URL stored by identity-service. Gateway
+does not expose old direct profile avatar upload routes such as
+`PUT /api/user/users/profile/avatar` or `PATCH /api/user/users/profile/avatar`.
+
 Media video thumbnails:
 
 Video list/detail/metadata responses expose `thumbnailUrl` as a permanent
