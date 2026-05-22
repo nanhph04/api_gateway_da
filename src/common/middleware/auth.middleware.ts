@@ -99,7 +99,7 @@ export class AuthMiddleware implements NestMiddleware {
     }
 
     const entry = getRequestRouteManifestEntry(req);
-    return entry?.streamMode === 'sse' || /\/thumbnail\/?$/.test(req.path);
+    return entry?.streamMode === 'sse';
   }
 
   private verifyAccessToken(token: string): jwt.JwtPayload {

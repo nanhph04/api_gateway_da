@@ -153,6 +153,8 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   mediaRoute('GET', /^\/api\/media\/me\/channel\/?$/, 'protected'),
   mediaRoute('POST', /^\/api\/media\/me\/channel\/?$/, 'protected'),
   mediaRoute('PATCH', /^\/api\/media\/me\/channel\/?$/, 'protected'),
+  mediaRoute('POST', /^\/api\/media\/me\/channel\/avatar\/?$/, 'protected'),
+  mediaRoute('POST', /^\/api\/media\/me\/channel\/banner\/?$/, 'protected'),
   mediaRoute('GET', /^\/api\/media\/channels\/[^/]+\/?$/, 'optional', {
     requiresInternalSecret: false,
   }),
@@ -211,11 +213,6 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     /^\/api\/media\/studio\/videos\/[^/]+\/?$/,
     'protected',
   ),
-  mediaRoute(
-    'GET',
-    /^\/api\/media\/studio\/videos\/[^/]+\/thumbnail\/?$/,
-    'protected',
-  ),
   mediaRoute('GET', /^\/api\/media\/videos\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
@@ -268,9 +265,6 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/metadata\/?$/, 'public', {
-    requiresInternalSecret: false,
-  }),
-  mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/thumbnail\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
   mediaRoute(

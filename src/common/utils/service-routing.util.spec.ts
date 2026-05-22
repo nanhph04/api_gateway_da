@@ -132,6 +132,30 @@ describe('service routing manifest', () => {
     ).toBeUndefined();
   });
 
+  it('routes channel image uploads to the protected media service', () => {
+    const avatarEntry = resolveRouteManifestEntry(
+      'POST',
+      '/api/media/me/channel/avatar',
+    );
+    const bannerEntry = resolveRouteManifestEntry(
+      'POST',
+      '/api/media/me/channel/banner',
+    );
+
+    expect(avatarEntry?.serviceKey).toBe('mediaService');
+    expect(avatarEntry?.authPolicy).toBe('protected');
+    expect(avatarEntry?.requiresInternalSecret).toBe(true);
+    expect(bannerEntry?.serviceKey).toBe('mediaService');
+    expect(bannerEntry?.authPolicy).toBe('protected');
+    expect(bannerEntry?.requiresInternalSecret).toBe(true);
+    expect(resolveProxyPath('POST', '/api/media/me/channel/avatar')).toBe(
+      '/api/media/me/channel/avatar',
+    );
+    expect(resolveProxyPath('POST', '/api/media/me/channel/banner')).toBe(
+      '/api/media/me/channel/banner',
+    );
+  });
+
   it('routes purchased video requests to the protected media service', () => {
     const entry = resolveRouteManifestEntry(
       'GET',
@@ -175,22 +199,42 @@ describe('service routing manifest', () => {
     );
   });
 
-  it('routes video thumbnail streaming with public and owner access policies', () => {
-    const publicEntry = resolveRouteManifestEntry(
+  it('does not route removed media thumbnail streaming endpoints', () => {
+    expect(
+      resolveRouteManifestEntry(
+        'GET',
+        '/api/media/videos/video-1/thumbnail',
+      ),
+    ).toBeUndefined();
+    expect(
+      resolveRouteManifestEntry(
+        'GET',
+        '/api/media/studio/videos/video-1/thumbnail',
+      ),
+    ).toBeUndefined();
+    expect(
+      resolveProxyPath(
+        'GET',
+        '/api/media/videos/video-1/thumbnail',
+      ),
+    ).toBe('/api/media/videos/video-1/thumbnail');
+    expect(
+      resolveProxyPath(
+        'GET',
+        '/api/media/studio/videos/video-1/thumbnail',
+      ),
+    ).toBe('/api/media/studio/videos/video-1/thumbnail');
+  });
+
+  it('keeps thumbnail URLs as public response data, not gateway routes', () => {
+    const metadataEntry = resolveRouteManifestEntry(
       'GET',
-      '/api/media/videos/video-1/thumbnail',
-    );
-    const ownerEntry = resolveRouteManifestEntry(
-      'GET',
-      '/api/media/studio/videos/video-1/thumbnail',
+      '/api/media/videos/video-1/metadata',
     );
 
-    expect(publicEntry?.serviceKey).toBe('mediaService');
-    expect(publicEntry?.authPolicy).toBe('public');
-    expect(publicEntry?.requiresInternalSecret).toBe(false);
-    expect(ownerEntry?.serviceKey).toBe('mediaService');
-    expect(ownerEntry?.authPolicy).toBe('protected');
-    expect(ownerEntry?.requiresInternalSecret).toBe(true);
+    expect(metadataEntry?.serviceKey).toBe('mediaService');
+    expect(metadataEntry?.authPolicy).toBe('public');
+    expect(metadataEntry?.requiresInternalSecret).toBe(false);
   });
 
   it('routes membership auto-renew updates to the protected media service', () => {

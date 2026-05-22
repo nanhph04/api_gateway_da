@@ -141,30 +141,29 @@ describe('AuthMiddleware', () => {
     expect(next).toHaveBeenCalledTimes(1);
   });
 
-  it('allows protected owner thumbnails with access_token query auth', () => {
-    const req = buildRequest(
-      'GET',
-      '/api/media/studio/videos/video-1/thumbnail',
-      undefined,
-      { access_token: signToken() },
-    );
-
-    middleware.use(req, {} as any, next);
-
-    expect(req.user).toEqual(
-      expect.objectContaining({
-        sub: 'user-1',
-      }),
-    );
-    expect(next).toHaveBeenCalledTimes(1);
-  });
-
   it('does not allow query token auth for ordinary protected APIs', () => {
     expect(() =>
       middleware.use(
         buildRequest('GET', '/api/media/studio/videos', undefined, {
           access_token: signToken(),
         }),
+        {} as any,
+        next,
+      ),
+    ).toThrow(UnauthorizedException);
+
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('does not allow query token auth for removed owner thumbnail routes', () => {
+    expect(() =>
+      middleware.use(
+        buildRequest(
+          'GET',
+          '/api/media/studio/videos/video-1/thumbnail',
+          undefined,
+          { access_token: signToken() },
+        ),
         {} as any,
         next,
       ),

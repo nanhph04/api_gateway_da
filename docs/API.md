@@ -1,6 +1,27 @@
 API GATEWAY ROUTES
 ==================
 
+Media channel image uploads:
+
+```text
+POST  /api/media/me/channel/avatar
+POST  /api/media/me/channel/banner
+```
+
+Both routes are protected multipart upload routes. The gateway forwards them
+unchanged to media-service and injects the internal gateway secret plus
+authenticated user headers. Media-service uploads the object to
+`MINIO_PUBLIC_BUCKET` and returns permanent public `avatarUrl`/`bannerUrl`
+values; FE renders those URLs directly.
+
+Media video thumbnails:
+
+Video list/detail/metadata responses expose `thumbnailUrl` as a permanent
+public MinIO object URL. Gateway no longer exposes
+`GET /api/media/videos/:id/thumbnail` or
+`GET /api/media/studio/videos/:id/thumbnail`; FE should render `thumbnailUrl`
+directly.
+
 Media membership routes:
 
 ```text
