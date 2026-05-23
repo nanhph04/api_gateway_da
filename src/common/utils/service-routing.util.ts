@@ -169,6 +169,11 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   mediaRoute(
+    'POST',
+    /^\/api\/media\/channels\/[^/]+\/memberships\/[^/]+\/purchase\/?$/,
+    'protected',
+  ),
+  mediaRoute(
     'PATCH',
     /^\/api\/media\/admin\/channels\/[^/]+\/membership\/?$/,
     'protected',
@@ -208,11 +213,7 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   mediaRoute('GET', /^\/api\/media\/videos\/events\/stream\/?$/, 'protected', {
     streamMode: 'sse',
   }),
-  mediaRoute(
-    'GET',
-    /^\/api\/media\/studio\/videos\/[^/]+\/?$/,
-    'protected',
-  ),
+  mediaRoute('GET', /^\/api\/media\/studio\/videos\/[^/]+\/?$/, 'protected'),
   mediaRoute('GET', /^\/api\/media\/videos\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
@@ -279,16 +280,9 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     requiresInternalSecret: false,
   }),
 
-  mediaRoute(
-    'GET',
-    /^\/api\/media\/me\/videos\/subscribed\/?$/,
-    'protected',
-  ),
-  mediaRoute(
-    'GET',
-    /^\/api\/media\/me\/videos\/purchased\/?$/,
-    'protected',
-  ),
+  mediaRoute('GET', /^\/api\/media\/me\/videos\/subscribed\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/me\/videos\/purchased\/?$/, 'protected'),
+  mediaRoute('POST', /^\/api\/media\/videos\/[^/]+\/purchase\/?$/, 'protected'),
   mediaRoute(
     'GET',
     /^\/api\/media\/me\/videos\/continue-watching\/?$/,
@@ -362,7 +356,11 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     /^\/api\/finance\/deposits\/[^/]+\/webhook\/success\/?$/,
     'webhook',
   ),
-  financeRoute('ALL', /^\/api\/finance(?:\/.*)?\/?$/, 'protected'),
+  financeRoute(
+    'ALL',
+    /^\/api\/finance(?:\/(?!payments(?:\/|$)).*)?\/?$/,
+    'protected',
+  ),
   financeRoute('ALL', /^\/api\/studio(?:\/.*)?\/?$/, 'protected'),
 
   financeRoute('GET', /^\/api\/deposits\/packages\/?$/, 'public', {
@@ -381,9 +379,6 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     deprecated: true,
   }),
   financeRoute('ALL', /^\/api\/wallets(?:\/.*)?\/?$/, 'protected', {
-    deprecated: true,
-  }),
-  financeRoute('ALL', /^\/api\/payments(?:\/.*)?\/?$/, 'protected', {
     deprecated: true,
   }),
   financeRoute('ALL', /^\/api\/transactions(?:\/.*)?\/?$/, 'protected', {

@@ -209,6 +209,33 @@ describe('service routing manifest', () => {
     );
   });
 
+  it('routes media purchase requests to the protected media service', () => {
+    const videoEntry = resolveRouteManifestEntry(
+      'POST',
+      '/api/media/videos/video-1/purchase',
+    );
+    const membershipEntry = resolveRouteManifestEntry(
+      'POST',
+      '/api/media/channels/channel-1/memberships/tier-1/purchase',
+    );
+
+    expect(videoEntry?.serviceKey).toBe('mediaService');
+    expect(videoEntry?.authPolicy).toBe('protected');
+    expect(videoEntry?.requiresInternalSecret).toBe(true);
+    expect(membershipEntry?.serviceKey).toBe('mediaService');
+    expect(membershipEntry?.authPolicy).toBe('protected');
+    expect(membershipEntry?.requiresInternalSecret).toBe(true);
+    expect(resolveProxyPath('POST', '/api/media/videos/video-1/purchase')).toBe(
+      '/api/media/videos/video-1/purchase',
+    );
+    expect(
+      resolveProxyPath(
+        'POST',
+        '/api/media/channels/channel-1/memberships/tier-1/purchase',
+      ),
+    ).toBe('/api/media/channels/channel-1/memberships/tier-1/purchase');
+  });
+
   it('routes studio video detail requests to the protected media service', () => {
     const entry = resolveRouteManifestEntry(
       'GET',
@@ -240,10 +267,7 @@ describe('service routing manifest', () => {
 
   it('does not route removed media thumbnail streaming endpoints', () => {
     expect(
-      resolveRouteManifestEntry(
-        'GET',
-        '/api/media/videos/video-1/thumbnail',
-      ),
+      resolveRouteManifestEntry('GET', '/api/media/videos/video-1/thumbnail'),
     ).toBeUndefined();
     expect(
       resolveRouteManifestEntry(
@@ -251,17 +275,11 @@ describe('service routing manifest', () => {
         '/api/media/studio/videos/video-1/thumbnail',
       ),
     ).toBeUndefined();
+    expect(resolveProxyPath('GET', '/api/media/videos/video-1/thumbnail')).toBe(
+      '/api/media/videos/video-1/thumbnail',
+    );
     expect(
-      resolveProxyPath(
-        'GET',
-        '/api/media/videos/video-1/thumbnail',
-      ),
-    ).toBe('/api/media/videos/video-1/thumbnail');
-    expect(
-      resolveProxyPath(
-        'GET',
-        '/api/media/studio/videos/video-1/thumbnail',
-      ),
+      resolveProxyPath('GET', '/api/media/studio/videos/video-1/thumbnail'),
     ).toBe('/api/media/studio/videos/video-1/thumbnail');
   });
 
@@ -358,6 +376,20 @@ describe('service routing manifest', () => {
     expect(resolveProxyPath('GET', '/api/finance/wallets/me/')).toBe(
       '/api/wallets/me/',
     );
+  });
+
+  it('does not route removed finance payment APIs', () => {
+    expect(
+      resolveRouteManifestEntry('POST', '/api/finance/payments'),
+    ).toBeUndefined();
+    expect(
+      resolveRouteManifestEntry('POST', '/api/finance/payments/payment-1'),
+    ).toBeUndefined();
+    expect(resolveRouteManifestEntry('POST', '/api/payments')).toBeUndefined();
+    expect(resolveProxyPath('POST', '/api/finance/payments')).toBe(
+      '/api/finance/payments',
+    );
+    expect(resolveProxyPath('POST', '/api/payments')).toBe('/api/payments');
   });
 
   it('keeps legacy finance resource aliases unchanged', () => {
