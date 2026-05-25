@@ -86,6 +86,13 @@ describe('service routing manifest', () => {
 
     expect(
       resolveRouteManifestEntry(
+        'GET',
+        '/api/media/admin/videos/video-1/preview',
+      )?.authPolicy,
+    ).toBe('protected');
+
+    expect(
+      resolveRouteManifestEntry(
         'PATCH',
         '/api/media/admin/videos/video-1/moderation',
       )?.serviceKey,

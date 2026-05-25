@@ -336,6 +336,11 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/admin\/videos\/?$/, 'protected'),
+  mediaRoute(
+    'GET',
+    /^\/api\/media\/admin\/videos\/[^/]+\/preview\/?$/,
+    'protected',
+  ),
   mediaRoute('GET', /^\/api\/media\/admin\/videos\/[^/]+\/?$/, 'protected'),
   mediaRoute(
     'PATCH',
