@@ -100,10 +100,6 @@ describe('service routing manifest', () => {
   });
 
   it('routes public discovery video lists through the current media contract', () => {
-    const categoryEntry = resolveRouteManifestEntry(
-      'GET',
-      '/api/media/categories/music/videos?page=1&limit=20',
-    );
     const byCategoryEntry = resolveRouteManifestEntry(
       'GET',
       '/api/media/videos/by-category?category=music&page=1&limit=20',
@@ -113,9 +109,6 @@ describe('service routing manifest', () => {
       '/api/media/videos/latest?limit=20',
     );
 
-    expect(categoryEntry?.serviceKey).toBe('mediaService');
-    expect(categoryEntry?.authPolicy).toBe('public');
-    expect(categoryEntry?.requiresInternalSecret).toBe(false);
     expect(byCategoryEntry?.serviceKey).toBe('mediaService');
     expect(byCategoryEntry?.authPolicy).toBe('public');
     expect(byCategoryEntry?.requiresInternalSecret).toBe(false);
@@ -123,6 +116,22 @@ describe('service routing manifest', () => {
     expect(latestEntry?.authPolicy).toBe('public');
     expect(latestEntry?.requiresInternalSecret).toBe(false);
   });
+
+  it('does not route removed category slug video list endpoint', () => {
+    expect(
+      resolveRouteManifestEntry(
+        'GET',
+        '/api/media/categories/music/videos?page=1&limit=20',
+      ),
+    ).toBeUndefined();
+    expect(
+      resolveProxyPath(
+        'GET',
+        '/api/media/categories/music/videos?page=1&limit=20',
+      ),
+    ).toBe('/api/media/categories/music/videos?page=1&limit=20');
+  });
+
   it('does not make write methods public for public GET resources', () => {
     expect(
       resolveRouteManifestEntry('GET', '/api/media/channels/channel-1')

@@ -141,9 +141,6 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   mediaRoute('GET', /^\/api\/media\/categories\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
-  mediaRoute('GET', /^\/api\/media\/categories\/[^/]+\/videos\/?$/, 'public', {
-    requiresInternalSecret: false,
-  }),
   mediaRoute('GET', /^\/api\/media\/tags\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
