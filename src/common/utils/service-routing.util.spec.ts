@@ -394,6 +394,25 @@ describe('service routing manifest', () => {
     );
   });
 
+  it('routes finance health and admin dashboard requests', () => {
+    const healthEntry = resolveRouteManifestEntry('GET', '/api/finance/health');
+    const dashboardEntry = resolveRouteManifestEntry(
+      'GET',
+      '/api/finance/admin/dashboard/overview?startDate=2026-05-01',
+    );
+    const legacyDashboardEntry = resolveRouteManifestEntry(
+      'GET',
+      '/api/admin/dashboard/overview',
+    );
+
+    expect(healthEntry?.serviceKey).toBe('financeService');
+    expect(healthEntry?.authPolicy).toBe('public');
+    expect(dashboardEntry?.serviceKey).toBe('financeService');
+    expect(dashboardEntry?.authPolicy).toBe('protected');
+    expect(legacyDashboardEntry?.serviceKey).toBe('financeService');
+    expect(legacyDashboardEntry?.authPolicy).toBe('protected');
+  });
+
   it('does not route removed finance payment APIs', () => {
     expect(
       resolveRouteManifestEntry('POST', '/api/finance/payments'),

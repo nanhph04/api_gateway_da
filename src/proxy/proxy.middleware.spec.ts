@@ -150,6 +150,21 @@ describe('ProxyMiddleware', () => {
         originalUrl: '/api/finance/deposits/admin/packages?all=true',
       }),
     ).resolves.toBe('/api/deposits/admin/packages?all=true');
+
+    await expect(
+      financeProxyOptions.proxyReqPathResolver({
+        method: 'GET',
+        originalUrl:
+          '/api/finance/admin/dashboard/overview?startDate=2026-05-01',
+      }),
+    ).resolves.toBe('/api/admin/dashboard/overview?startDate=2026-05-01');
+
+    await expect(
+      financeProxyOptions.proxyReqPathResolver({
+        method: 'GET',
+        originalUrl: '/api/finance/health',
+      }),
+    ).resolves.toBe('/api/health');
   });
 
   it('forwards legacy finance resource routes without rewriting', async () => {

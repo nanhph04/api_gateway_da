@@ -347,6 +347,7 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   mediaRoute('GET', /^\/api\/media\/admin\/reports\/summary\/?$/, 'protected'),
   mediaRoute('GET', /^\/api\/media\/admin\/reports\/?$/, 'protected'),
 
+  financeRoute('GET', /^\/api\/finance\/health\/?$/, 'public'),
   financeRoute('GET', /^\/api\/finance\/deposits\/packages\/?$/, 'public'),
   financeRoute(
     'POST',
@@ -359,12 +360,23 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'webhook',
   ),
   financeRoute(
+    'GET',
+    /^\/api\/finance\/admin\/dashboard\/overview\/?$/,
+    'protected',
+  ),
+  financeRoute(
     'ALL',
     /^\/api\/finance(?:\/(?!payments(?:\/|$)).*)?\/?$/,
     'protected',
   ),
   financeRoute('ALL', /^\/api\/studio(?:\/.*)?\/?$/, 'protected'),
 
+  financeRoute('GET', /^\/api\/health\/?$/, 'public', {
+    deprecated: true,
+  }),
+  financeRoute('GET', /^\/api\/admin\/dashboard\/overview\/?$/, 'protected', {
+    deprecated: true,
+  }),
   financeRoute('GET', /^\/api\/deposits\/packages\/?$/, 'public', {
     deprecated: true,
   }),
