@@ -37,7 +37,9 @@ const identityRoute = (
   method: string,
   publicPathPattern: RegExp,
   authPolicy: AuthPolicy,
-  options: Partial<Pick<RouteManifestEntry, 'streamMode'>> = {},
+  options: Partial<
+    Pick<RouteManifestEntry, 'rateLimitBucket' | 'streamMode'>
+  > = {},
 ): RouteManifestEntry => ({
   method,
   serviceKey: 'identityService',
@@ -51,7 +53,7 @@ const identityRoute = (
     : '/api/identity/user',
   authPolicy,
   requiresInternalSecret: false,
-  rateLimitBucket: 'identityService',
+  rateLimitBucket: options.rateLimitBucket ?? 'identityService',
   streamMode: options.streamMode,
 });
 
@@ -103,7 +105,9 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
   identityRoute('POST', /^\/api\/auth\/forgot-password\/?$/, 'public'),
   identityRoute('POST', /^\/api\/auth\/reset-password\/?$/, 'public'),
   identityRoute('POST', /^\/api\/auth\/refresh\/?$/, 'cookieAuth'),
-  identityRoute('GET', /^\/api\/auth\/session\/profile\/?$/, 'cookieAuth'),
+  identityRoute('GET', /^\/api\/auth\/session\/profile\/?$/, 'cookieAuth', {
+    rateLimitBucket: 'identitySessionProfile',
+  }),
   identityRoute('GET', /^\/api\/auth\/session\/events\/?$/, 'protected', {
     streamMode: 'sse',
   }),

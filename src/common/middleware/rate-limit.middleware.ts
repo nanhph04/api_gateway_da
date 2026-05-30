@@ -1,5 +1,6 @@
 import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { createHash } from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import {
@@ -22,6 +23,7 @@ export class RateLimitMiddleware implements NestMiddleware {
   private initLimiters() {
     const rateLimitConfigs = {
       identityService: 'userService',
+      identitySessionProfile: 'identitySessionProfile',
       mediaService: 'mediaService',
       financeService: 'financeService',
       walletService: 'walletService',
@@ -47,6 +49,14 @@ export class RateLimitMiddleware implements NestMiddleware {
               const user = req['user'] as { sub?: string } | undefined;
               if (user?.sub) {
                 return user.sub;
+              }
+              const cookieHeader = req.headers.cookie;
+              if (
+                rule.authPolicy === 'cookieAuth' &&
+                typeof cookieHeader === 'string' &&
+                cookieHeader
+              ) {
+                return this.hashRateLimitKey(cookieHeader);
               }
               return ipKeyGenerator(req.ip || 'unknown');
             },
@@ -91,5 +101,9 @@ export class RateLimitMiddleware implements NestMiddleware {
     }
 
     next();
+  }
+
+  private hashRateLimitKey(value: string): string {
+    return createHash('sha256').update(value).digest('hex');
   }
 }

@@ -172,6 +172,14 @@ describe('service routing manifest', () => {
     ).toBe('/api/identity/user/users/profile/avatar/complete');
   });
 
+  it('uses the dedicated session profile rate limit bucket', () => {
+    const entry = resolveRouteManifestEntry('GET', '/api/auth/session/profile');
+
+    expect(entry?.serviceKey).toBe('identityService');
+    expect(entry?.authPolicy).toBe('cookieAuth');
+    expect(entry?.rateLimitBucket).toBe('identitySessionProfile');
+  });
+
   it('does not route removed direct profile avatar upload endpoints', () => {
     expect(
       resolveRouteManifestEntry('PUT', '/api/user/users/profile/avatar'),

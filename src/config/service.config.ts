@@ -81,6 +81,19 @@ export const rateLimitConfig = registerAs('rateLimit', () => {
       max: getNumberConfig(configService, 'USER_RATE_LIMIT_MAX', 100),
     },
 
+    identitySessionProfile: {
+      windowMs: getNumberConfig(
+        configService,
+        'IDENTITY_SESSION_PROFILE_RATE_LIMIT_WINDOW_MS',
+        60 * 1000,
+      ),
+      max: getNumberConfig(
+        configService,
+        'IDENTITY_SESSION_PROFILE_RATE_LIMIT_MAX',
+        120,
+      ),
+    },
+
     mediaService: {
       windowMs: getNumberConfig(
         configService,
