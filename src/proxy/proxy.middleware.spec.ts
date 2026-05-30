@@ -85,6 +85,26 @@ describe('ProxyMiddleware', () => {
     ]);
   });
 
+  it('rewrites identity clear-cookie paths for logout responses', () => {
+    new ProxyMiddleware(serviceConfig as never);
+
+    const authProxyOptions = getProxyOptions('http://identity-service');
+    const headers = authProxyOptions.userResHeaderDecorator(
+      {
+        'set-cookie':
+          'refresh_token=; Path=/api/identity/auth; Expires=Thu, 01 Jan 1970 00:00:00 GMT',
+      },
+      {
+        method: 'POST',
+        originalUrl: '/api/auth/logout',
+      },
+    );
+
+    expect(headers['set-cookie']).toBe(
+      'refresh_token=; Path=/api/auth; Expires=Thu, 01 Jan 1970 00:00:00 GMT',
+    );
+  });
+
   it('leaves non-identity set-cookie paths unchanged', () => {
     new ProxyMiddleware(serviceConfig as never);
 
