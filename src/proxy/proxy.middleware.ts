@@ -248,7 +248,7 @@ export class ProxyMiddleware implements NestMiddleware {
   private rewriteIdentityAuthCookiePathValue(cookie: string): string {
     return cookie.replace(
       /Path=\/api\/identity\/auth(?=;|$)/i,
-      'Path=/api/auth',
+      'Path=/',
     );
   }
 

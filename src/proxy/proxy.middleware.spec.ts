@@ -80,8 +80,8 @@ describe('ProxyMiddleware', () => {
     );
 
     expect(headers['set-cookie']).toEqual([
-      'refresh_token=token; Path=/api/auth; HttpOnly; SameSite=Strict',
-      'other=value; Path=/api/auth; HttpOnly',
+      'refresh_token=token; Path=/; HttpOnly; SameSite=Strict',
+      'other=value; Path=/; HttpOnly',
     ]);
   });
 
@@ -101,7 +101,7 @@ describe('ProxyMiddleware', () => {
     );
 
     expect(headers['set-cookie']).toBe(
-      'refresh_token=; Path=/api/auth; Expires=Thu, 01 Jan 1970 00:00:00 GMT',
+      'refresh_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT',
     );
   });
 
