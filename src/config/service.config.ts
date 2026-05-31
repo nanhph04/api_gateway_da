@@ -9,7 +9,15 @@ const getNumberConfig = (
   key: string,
   defaultValue: number,
 ): number => {
-  return configService.get<number>(key, defaultValue);
+  const value = configService.get<string | number>(key);
+
+  if (value === undefined || value === null || value === '') {
+    return defaultValue;
+  }
+
+  const parsedValue = Number(value);
+
+  return Number.isFinite(parsedValue) ? parsedValue : defaultValue;
 };
 
 export const serviceConfig = registerAs('services', () => {
