@@ -370,8 +370,6 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     /^\/api\/media\/admin\/videos\/[^/]+\/moderation\/?$/,
     'protected',
   ),
-  mediaRoute('GET', /^\/api\/media\/admin\/reports\/summary\/?$/, 'protected'),
-  mediaRoute('GET', /^\/api\/media\/admin\/reports\/?$/, 'protected'),
 
   financeRoute('GET', /^\/api\/finance\/health\/?$/, 'public'),
   financeRoute('GET', /^\/api\/finance\/deposits\/packages\/?$/, 'public'),

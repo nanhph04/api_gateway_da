@@ -61,18 +61,6 @@ describe('service routing manifest', () => {
     ).toBe('mediaService');
 
     expect(
-      resolveRouteManifestEntry('GET', '/api/media/admin/reports/summary')
-        ?.serviceKey,
-    ).toBe('mediaService');
-
-    expect(
-      resolveRouteManifestEntry(
-        'GET',
-        '/api/media/admin/reports?status=pending&page=1&limit=5',
-      )?.serviceKey,
-    ).toBe('mediaService');
-
-    expect(
       resolveRouteManifestEntry(
         'GET',
         '/api/media/admin/videos?page=1&limit=20',
@@ -97,6 +85,27 @@ describe('service routing manifest', () => {
         '/api/media/admin/videos/video-1/moderation',
       )?.serviceKey,
     ).toBe('mediaService');
+  });
+
+  it('does not route removed media report APIs', () => {
+    expect(
+      resolveRouteManifestEntry('GET', '/api/media/admin/reports/summary'),
+    ).toBeUndefined();
+    expect(
+      resolveRouteManifestEntry(
+        'GET',
+        '/api/media/admin/reports?status=pending&page=1&limit=5',
+      ),
+    ).toBeUndefined();
+    expect(
+      resolveRouteManifestEntry('POST', '/api/media/videos/video-1/reports'),
+    ).toBeUndefined();
+    expect(
+      resolveRouteManifestEntry(
+        'POST',
+        '/api/media/channels/channel-1/reports',
+      ),
+    ).toBeUndefined();
   });
 
   it('routes public discovery video lists through the current media contract', () => {
