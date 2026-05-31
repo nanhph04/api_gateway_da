@@ -68,8 +68,10 @@ describe('service routing manifest', () => {
     ).toBe('mediaService');
 
     expect(
-      resolveRouteManifestEntry('GET', '/api/media/admin/videos/summary')
-        ?.serviceKey,
+      resolveRouteManifestEntry(
+        'GET',
+        '/api/media/admin/videos/summary?period=month',
+      )?.serviceKey,
     ).toBe('mediaService');
 
     expect(
