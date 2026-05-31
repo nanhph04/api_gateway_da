@@ -281,6 +281,20 @@ describe('service routing manifest', () => {
     );
   });
 
+  it('routes studio video metadata suggestions to the protected media service', () => {
+    const entry = resolveRouteManifestEntry(
+      'POST',
+      '/api/media/studio/videos/metadata-suggestions',
+    );
+
+    expect(entry?.serviceKey).toBe('mediaService');
+    expect(entry?.authPolicy).toBe('protected');
+    expect(entry?.requiresInternalSecret).toBe(true);
+    expect(
+      resolveProxyPath('POST', '/api/media/studio/videos/metadata-suggestions'),
+    ).toBe('/api/media/studio/videos/metadata-suggestions');
+  });
+
   it('routes media video event streams through the SSE proxy', () => {
     const entry = resolveRouteManifestEntry(
       'GET',

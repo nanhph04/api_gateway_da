@@ -45,6 +45,17 @@ public MinIO object URL. Gateway no longer exposes
 `GET /api/media/studio/videos/:id/thumbnail`; FE should render `thumbnailUrl`
 directly.
 
+Media studio metadata suggestions:
+
+```text
+POST /api/media/studio/videos/metadata-suggestions
+```
+
+This is a protected media-service route. The gateway forwards it unchanged,
+validates the bearer token, and injects authenticated user headers plus the
+media internal gateway secret. Clients should send `Authorization: Bearer
+<accessToken>` and the JSON request body documented in media-service API docs.
+
 Media membership routes:
 
 ```text

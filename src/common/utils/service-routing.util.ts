@@ -229,6 +229,11 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     streamMode: 'sse',
   }),
   mediaRoute('GET', /^\/api\/media\/studio\/videos\/[^/]+\/?$/, 'protected'),
+  mediaRoute(
+    'POST',
+    /^\/api\/media\/studio\/videos\/metadata-suggestions\/?$/,
+    'protected',
+  ),
   mediaRoute('GET', /^\/api\/media\/videos\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
