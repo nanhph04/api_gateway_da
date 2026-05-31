@@ -108,6 +108,10 @@ describe('service routing manifest', () => {
       'GET',
       '/api/media/videos/latest?limit=20',
     );
+    const rankingEntry = resolveRouteManifestEntry(
+      'GET',
+      '/api/media/videos/ranking?metric=views&period=week&limit=6',
+    );
 
     expect(byCategoryEntry?.serviceKey).toBe('mediaService');
     expect(byCategoryEntry?.authPolicy).toBe('public');
@@ -115,6 +119,9 @@ describe('service routing manifest', () => {
     expect(latestEntry?.serviceKey).toBe('mediaService');
     expect(latestEntry?.authPolicy).toBe('public');
     expect(latestEntry?.requiresInternalSecret).toBe(false);
+    expect(rankingEntry?.serviceKey).toBe('mediaService');
+    expect(rankingEntry?.authPolicy).toBe('public');
+    expect(rankingEntry?.requiresInternalSecret).toBe(false);
   });
 
   it('does not route removed category slug video list endpoint', () => {
@@ -413,8 +420,23 @@ describe('service routing manifest', () => {
       '/api/admin/dashboard/overview',
     );
 
+    const identityHealthEntry = resolveRouteManifestEntry(
+      'GET',
+      '/api/identity/health',
+    );
+    const mediaHealthEntry = resolveRouteManifestEntry(
+      'GET',
+      '/api/media/health',
+    );
+
     expect(healthEntry?.serviceKey).toBe('financeService');
     expect(healthEntry?.authPolicy).toBe('public');
+    expect(identityHealthEntry?.serviceKey).toBe('identityService');
+    expect(identityHealthEntry?.authPolicy).toBe('public');
+    expect(identityHealthEntry?.requiresInternalSecret).toBe(false);
+    expect(mediaHealthEntry?.serviceKey).toBe('mediaService');
+    expect(mediaHealthEntry?.authPolicy).toBe('public');
+    expect(mediaHealthEntry?.requiresInternalSecret).toBe(false);
     expect(dashboardEntry?.serviceKey).toBe('financeService');
     expect(dashboardEntry?.authPolicy).toBe('protected');
     expect(legacyDashboardEntry?.serviceKey).toBe('financeService');

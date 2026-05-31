@@ -98,6 +98,20 @@ const financeRoute = (
 });
 
 export const ROUTE_MANIFEST: RouteManifestEntry[] = [
+  {
+    method: 'GET',
+    serviceKey: 'identityService',
+    serviceName: 'identity',
+    publicPathPattern: /^\/api\/identity\/health\/?$/,
+    publicPathPrefix: '/api/identity',
+    targetPathPrefix: '/api/identity',
+    authPolicy: 'public',
+    requiresInternalSecret: false,
+    rateLimitBucket: 'identityService',
+  },
+  mediaRoute('GET', /^\/api\/media\/health\/?$/, 'public', {
+    requiresInternalSecret: false,
+  }),
   identityRoute('POST', /^\/api\/auth\/register\/?$/, 'public'),
   identityRoute('POST', /^\/api\/auth\/login\/?$/, 'public'),
   identityRoute('POST', /^\/api\/auth\/verify-email\/?$/, 'public'),
@@ -275,6 +289,9 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   mediaRoute('GET', /^\/api\/media\/videos\/latest\/?$/, 'public', {
+    requiresInternalSecret: false,
+  }),
+  mediaRoute('GET', /^\/api\/media\/videos\/ranking\/?$/, 'public', {
     requiresInternalSecret: false,
   }),
   mediaRoute('GET', /^\/api\/media\/videos\/by-category\/?$/, 'public', {

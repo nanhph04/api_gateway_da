@@ -48,6 +48,17 @@ describe('AuthMiddleware', () => {
     expect(next).toHaveBeenCalledTimes(1);
   });
 
+  it('allows service health routes without authorization', () => {
+    middleware.use(
+      buildRequest('GET', '/api/identity/health'),
+      {} as any,
+      next,
+    );
+    middleware.use(buildRequest('GET', '/api/media/health'), {} as any, next);
+
+    expect(next).toHaveBeenCalledTimes(2);
+  });
+
   it('allows cookie auth routes without bearer verification', () => {
     middleware.use(
       buildRequest('GET', '/api/auth/session/profile'),
