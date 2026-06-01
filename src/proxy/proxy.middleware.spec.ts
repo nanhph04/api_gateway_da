@@ -152,6 +152,14 @@ describe('ProxyMiddleware', () => {
     ).resolves.toBe('/api/media/videos/latest?limit=10');
   });
 
+  it('raises the media proxy body limit for channel image uploads', () => {
+    new ProxyMiddleware(serviceConfig as never);
+
+    const mediaProxyOptions = getProxyOptions('http://media-service');
+
+    expect(mediaProxyOptions.limit).toBe('12mb');
+  });
+
   it('rewrites namespaced finance routes to the finance-service api prefix', async () => {
     new ProxyMiddleware(serviceConfig as never);
 

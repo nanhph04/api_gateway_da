@@ -1,5 +1,4 @@
-API GATEWAY ROUTES
-==================
+# API GATEWAY ROUTES
 
 Media channel image uploads:
 
@@ -13,6 +12,9 @@ unchanged to media-service and injects the internal gateway secret plus
 authenticated user headers. Media-service uploads the object to
 `MINIO_PUBLIC_BUCKET` and returns permanent public `avatarUrl`/`bannerUrl`
 values; FE renders those URLs directly.
+
+Gateway media proxy allows these multipart bodies up to `12mb` so the
+media-service limits can apply: avatar file max `5MB`, banner file max `10MB`.
 
 Identity profile avatar uploads:
 

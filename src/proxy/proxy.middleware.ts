@@ -27,6 +27,8 @@ interface RequestWithGatewayContext extends Request {
   };
 }
 
+const MEDIA_PROXY_BODY_LIMIT = '12mb';
+
 @Injectable()
 export class ProxyMiddleware implements NestMiddleware {
   private readonly logger = new Logger(ProxyMiddleware.name);
@@ -42,7 +44,7 @@ export class ProxyMiddleware implements NestMiddleware {
       if (target && !entry.streamMode) {
         const proxyKey = this.getProxyKey(entry);
         if (!this.proxyMap.has(proxyKey)) {
-          this.proxyMap.set(proxyKey, this.createHttpProxy(target));
+          this.proxyMap.set(proxyKey, this.createHttpProxy(target, entry));
         }
       }
 
@@ -79,8 +81,12 @@ export class ProxyMiddleware implements NestMiddleware {
     handler(req, res, next);
   }
 
-  private createHttpProxy(target: string): ReturnType<typeof proxy> {
+  private createHttpProxy(
+    target: string,
+    entry: RouteManifestEntry,
+  ): ReturnType<typeof proxy> {
     return proxy(target, {
+      limit: this.getProxyBodyLimit(entry),
       proxyReqPathResolver: (req) => {
         return Promise.resolve(resolveProxyPath(req.method, req.originalUrl));
       },
@@ -105,6 +111,14 @@ export class ProxyMiddleware implements NestMiddleware {
         this.handleProxyError(err, req as Request, res);
       },
     });
+  }
+
+  private getProxyBodyLimit(entry: RouteManifestEntry): string | undefined {
+    if (entry.serviceKey === 'mediaService') {
+      return MEDIA_PROXY_BODY_LIMIT;
+    }
+
+    return undefined;
   }
 
   private createSseProxy(target: string): RequestHandler {
