@@ -390,6 +390,11 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   financeRoute(
+    'GET',
+    /^\/api\/finance\/admin\/channels\/[^/]+\/transactions\/?$/,
+    'protected',
+  ),
+  financeRoute(
     'ALL',
     /^\/api\/finance(?:\/(?!payments(?:\/|$)).*)?\/?$/,
     'protected',
