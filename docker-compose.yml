@@ -1,3 +1,5 @@
+name: media-system
+
 version: '3.8'
 
 services:
@@ -5,21 +7,25 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: api-gateway:latest
     container_name: api-gateway
-    ports:
-      - "3000:3000"
+    env_file:
+      - .env
     environment:
-      - PORT=3000
-      - JWT_SECRET=super_secret_jwt_key
-      - USER_SERVICE_URL=http://user-service:3001
-      - MEDIA_SERVICE_URL=http://media-service:3002
-      - WALLET_SERVICE_URL=http://wallet-service:3003
-      - PAYMENT_SERVICE_URL=http://payment-service:3004
-      - PROCESSING_SERVICE_URL=http://processing-service:3005
-    networks:
-      - dms_network
+      NODE_ENV: production
+      PORT: 4000
+      FRONTEND_URL: http://localhost:3000
+      BACKEND_URL: http://localhost:4000
+      IDENTITY_SERVICE_URL: http://identity-service:4001
+      MEDIA_SERVICE_URL: http://media-service:4002
+      FINANCE_SERVICE_URL: http://finance-service:4004
+    ports:
+      - "4000:4000"
     restart: unless-stopped
+    networks:
+      - app-network
 
 networks:
-  dms_network:
-    driver: bridge
+  app-network:
+    external: true
+    name: app-network
