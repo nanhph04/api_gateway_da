@@ -203,6 +203,39 @@ describe('service routing manifest', () => {
     expect(entry?.rateLimitBucket).toBe('identitySessionProfile');
   });
 
+  it('uses dedicated media playback rate limit buckets', () => {
+    expect(
+      resolveRouteManifestEntry('GET', '/api/media/me/videos/video-1/play')
+        ?.rateLimitBucket,
+    ).toBe('mediaPlayback');
+    expect(
+      resolveRouteManifestEntry('POST', '/api/media/me/videos/video-1/progress')
+        ?.rateLimitBucket,
+    ).toBe('mediaProgress');
+    expect(
+      resolveRouteManifestEntry(
+        'POST',
+        '/api/media/me/videos/video-1/playback-token/refresh',
+      )?.rateLimitBucket,
+    ).toBe('mediaPlayback');
+    expect(
+      resolveRouteManifestEntry('GET', '/api/media/stream/video-1/master.m3u8')
+        ?.rateLimitBucket,
+    ).toBe('mediaStreamManifest');
+    expect(
+      resolveRouteManifestEntry(
+        'GET',
+        '/api/media/stream/video-1/segments/segment-0001.ts',
+      )?.rateLimitBucket,
+    ).toBe('mediaStreamSegment');
+  });
+
+  it('keeps non-playback media routes on the generic media rate limit bucket', () => {
+    expect(
+      resolveRouteManifestEntry('GET', '/api/media/categories')?.rateLimitBucket,
+    ).toBe('mediaService');
+  });
+
   it('does not route removed direct profile avatar upload endpoints', () => {
     expect(
       resolveRouteManifestEntry('PUT', '/api/user/users/profile/avatar'),

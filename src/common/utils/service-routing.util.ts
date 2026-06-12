@@ -62,7 +62,10 @@ const mediaRoute = (
   publicPathPattern: RegExp,
   authPolicy: AuthPolicy,
   options: Partial<
-    Pick<RouteManifestEntry, 'requiresInternalSecret' | 'streamMode'>
+    Pick<
+      RouteManifestEntry,
+      'requiresInternalSecret' | 'rateLimitBucket' | 'streamMode'
+    >
   > = {},
 ): RouteManifestEntry => ({
   method,
@@ -71,7 +74,7 @@ const mediaRoute = (
   publicPathPattern,
   authPolicy,
   requiresInternalSecret: options.requiresInternalSecret ?? true,
-  rateLimitBucket: 'mediaService',
+  rateLimitBucket: options.rateLimitBucket ?? 'mediaService',
   streamMode: options.streamMode,
 });
 
@@ -274,16 +277,20 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
   ),
   mediaRoute('DELETE', /^\/api\/media\/studio\/videos\/[^/]+\/?$/, 'protected'),
-  mediaRoute('GET', /^\/api\/media\/me\/videos\/[^/]+\/play\/?$/, 'protected'),
+  mediaRoute('GET', /^\/api\/media\/me\/videos\/[^/]+\/play\/?$/, 'protected', {
+    rateLimitBucket: 'mediaPlayback',
+  }),
   mediaRoute(
     'POST',
     /^\/api\/media\/me\/videos\/[^/]+\/progress\/?$/,
     'protected',
+    { rateLimitBucket: 'mediaProgress' },
   ),
   mediaRoute(
     'POST',
     /^\/api\/media\/me\/videos\/[^/]+\/playback-token\/refresh\/?$/,
     'protected',
+    { rateLimitBucket: 'mediaPlayback' },
   ),
   mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/metadata\/?$/, 'public', {
     requiresInternalSecret: false,
@@ -317,13 +324,17 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'public',
     {
       requiresInternalSecret: false,
+      rateLimitBucket: 'mediaStreamManifest',
     },
   ),
   mediaRoute(
     'GET',
     /^\/api\/media\/stream\/[^/]+\/segments\/[^/]+\/?$/,
     'public',
-    { requiresInternalSecret: false },
+    {
+      requiresInternalSecret: false,
+      rateLimitBucket: 'mediaStreamSegment',
+    },
   ),
   mediaRoute('GET', /^\/api\/media\/admin\/categories\/?$/, 'protected'),
   mediaRoute('POST', /^\/api\/media\/admin\/categories\/?$/, 'protected'),

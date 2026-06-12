@@ -111,6 +111,50 @@ export const rateLimitConfig = registerAs('rateLimit', () => {
       max: getNumberConfig(configService, 'MEDIA_RATE_LIMIT_MAX', 100),
     },
 
+    mediaPlayback: {
+      windowMs: getNumberConfig(
+        configService,
+        'MEDIA_PLAYBACK_RATE_LIMIT_WINDOW_MS',
+        60 * 1000,
+      ),
+      max: getNumberConfig(configService, 'MEDIA_PLAYBACK_RATE_LIMIT_MAX', 60),
+    },
+
+    mediaProgress: {
+      windowMs: getNumberConfig(
+        configService,
+        'MEDIA_PROGRESS_RATE_LIMIT_WINDOW_MS',
+        60 * 1000,
+      ),
+      max: getNumberConfig(configService, 'MEDIA_PROGRESS_RATE_LIMIT_MAX', 30),
+    },
+
+    mediaStreamManifest: {
+      windowMs: getNumberConfig(
+        configService,
+        'MEDIA_STREAM_MANIFEST_RATE_LIMIT_WINDOW_MS',
+        60 * 1000,
+      ),
+      max: getNumberConfig(
+        configService,
+        'MEDIA_STREAM_MANIFEST_RATE_LIMIT_MAX',
+        120,
+      ),
+    },
+
+    mediaStreamSegment: {
+      windowMs: getNumberConfig(
+        configService,
+        'MEDIA_STREAM_SEGMENT_RATE_LIMIT_WINDOW_MS',
+        60 * 1000,
+      ),
+      max: getNumberConfig(
+        configService,
+        'MEDIA_STREAM_SEGMENT_RATE_LIMIT_MAX',
+        1000,
+      ),
+    },
+
     financeService: {
       windowMs: getNumberConfig(
         configService,
