@@ -138,7 +138,7 @@ export const rateLimitConfig = registerAs('rateLimit', () => {
       max: getNumberConfig(
         configService,
         'MEDIA_STREAM_MANIFEST_RATE_LIMIT_MAX',
-        120,
+        300,
       ),
     },
 
@@ -151,7 +151,7 @@ export const rateLimitConfig = registerAs('rateLimit', () => {
       max: getNumberConfig(
         configService,
         'MEDIA_STREAM_SEGMENT_RATE_LIMIT_MAX',
-        1000,
+        3000,
       ),
     },
 

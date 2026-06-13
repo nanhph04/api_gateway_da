@@ -1,13 +1,20 @@
 import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHash } from 'crypto';
+import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import {
   getRequestTargetService,
   ROUTE_MANIFEST,
 } from '../utils/service-routing.util';
-import { buildApiError } from '../utils/api-error.util';
+import { buildApiError, redactSensitiveUrl } from '../utils/api-error.util';
+
+type PlaybackTokenPayload = {
+  videoId?: unknown;
+  userId?: unknown;
+  scope?: unknown;
+  exp?: unknown;
+};
 
 @Injectable()
 export class RateLimitMiddleware implements NestMiddleware {
@@ -50,6 +57,10 @@ export class RateLimitMiddleware implements NestMiddleware {
             windowMs: config.windowMs,
             max: config.max,
             keyGenerator: (req: Request) => {
+              if (this.isMediaStreamBucket(rule.rateLimitBucket)) {
+                return this.getMediaStreamRateLimitKey(req);
+              }
+
               const user = req['user'] as { sub?: string } | undefined;
               if (user?.sub) {
                 return user.sub;
@@ -68,7 +79,7 @@ export class RateLimitMiddleware implements NestMiddleware {
               const requestId = req['id'] || 'no-req-id';
               const service = getRequestTargetService(req);
               this.logger.warn(
-                `[${requestId}] [${service}] rate limit exceeded for ${req.method} ${req.originalUrl}`,
+                `[${requestId}] [${service}] rate limit exceeded for ${req.method} ${redactSensitiveUrl(req.originalUrl)}`,
               );
               const mess =
                 'Too many requests from this IP, please try again later.';
@@ -105,6 +116,95 @@ export class RateLimitMiddleware implements NestMiddleware {
     }
 
     next();
+  }
+
+  private isMediaStreamBucket(bucket: string): boolean {
+    return bucket === 'mediaStreamManifest' || bucket === 'mediaStreamSegment';
+  }
+
+  private getMediaStreamRateLimitKey(req: Request): string {
+    const token = this.getPlaybackTokenFromRequest(req);
+    const payload = token ? this.verifyPlaybackToken(token) : null;
+
+    if (payload) {
+      return `stream:${payload.userId}:${payload.videoId}`;
+    }
+
+    return `stream-invalid:${ipKeyGenerator(req.ip || 'unknown')}`;
+  }
+
+  private getPlaybackTokenFromRequest(req: Request): string | null {
+    const token = req.query.token;
+
+    if (typeof token === 'string' && token.trim()) {
+      return token;
+    }
+
+    if (Array.isArray(token) && typeof token[0] === 'string' && token[0]) {
+      return token[0];
+    }
+
+    return null;
+  }
+
+  private verifyPlaybackToken(token: string): {
+    userId: string;
+    videoId: string;
+  } | null {
+    const [encodedPayload, signature] = token.split('.');
+
+    if (!encodedPayload || !signature) {
+      return null;
+    }
+
+    const expectedSignature = this.signPlaybackTokenPayload(encodedPayload);
+    const signatureBuffer = Buffer.from(signature);
+    const expectedSignatureBuffer = Buffer.from(expectedSignature);
+
+    if (
+      signatureBuffer.length !== expectedSignatureBuffer.length ||
+      !timingSafeEqual(signatureBuffer, expectedSignatureBuffer)
+    ) {
+      return null;
+    }
+
+    try {
+      const payload = JSON.parse(
+        Buffer.from(encodedPayload, 'base64url').toString('utf8'),
+      ) as PlaybackTokenPayload;
+
+      if (
+        typeof payload.userId !== 'string' ||
+        typeof payload.videoId !== 'string' ||
+        payload.scope !== 'stream' ||
+        typeof payload.exp !== 'number' ||
+        payload.exp < Math.floor(Date.now() / 1000)
+      ) {
+        return null;
+      }
+
+      return {
+        userId: payload.userId,
+        videoId: payload.videoId,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private signPlaybackTokenPayload(encodedPayload: string): string {
+    return createHmac(
+      'sha256',
+      this.configService.get<string>(
+        'PLAYBACK_TOKEN_SECRET',
+        this.configService.get<string>(
+          'ACCESS_TOKEN_SECRET',
+          'change-me-in-production',
+        ),
+      ),
+    )
+      .update(encodedPayload)
+      .digest('base64url');
   }
 
   private hashRateLimitKey(value: string): string {

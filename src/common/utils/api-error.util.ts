@@ -15,6 +15,23 @@ interface RequestWithId extends Request {
   id?: string;
 }
 
+export function redactSensitiveUrl(value: string): string {
+  try {
+    const url = new URL(value, 'http://localhost');
+
+    if (url.searchParams.has('token')) {
+      url.searchParams.set('token', '[redacted]');
+    }
+
+    return `${url.pathname}${url.search}${url.hash}`.replace(
+      /token=%5Bredacted%5D/gi,
+      'token=[redacted]',
+    );
+  } catch {
+    return value.replace(/([?&]token=)[^&#]*/gi, '$1[redacted]');
+  }
+}
+
 export function buildApiError(
   request: RequestWithId,
   code: number,
@@ -29,6 +46,6 @@ export function buildApiError(
     errors,
     requestId: request.id || 'no-req-id',
     timestamp: new Date().toISOString(),
-    path: request.originalUrl || request.url,
+    path: redactSensitiveUrl(request.originalUrl || request.url),
   };
 }
