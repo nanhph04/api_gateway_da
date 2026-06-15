@@ -292,7 +292,7 @@ export const ROUTE_MANIFEST: RouteManifestEntry[] = [
     'protected',
     { rateLimitBucket: 'mediaPlayback' },
   ),
-  mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/metadata\/?$/, 'public', {
+  mediaRoute('GET', /^\/api\/media\/videos\/[^/]+\/metadata\/?$/, 'optional', {
     requiresInternalSecret: false,
   }),
   mediaRoute(

@@ -384,7 +384,7 @@ describe('service routing manifest', () => {
     );
 
     expect(metadataEntry?.serviceKey).toBe('mediaService');
-    expect(metadataEntry?.authPolicy).toBe('public');
+    expect(metadataEntry?.authPolicy).toBe('optional');
     expect(metadataEntry?.requiresInternalSecret).toBe(false);
   });
 
